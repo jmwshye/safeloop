@@ -2,7 +2,18 @@
 
 프로젝트 헌장(44쪽)과 기존 화면 시안을 바탕으로 작성한 캡스톤 MVP 소스입니다.
 
-## 바로 실행
+
+## 설치 없이 웹 화면 보기
+
+### [안전고리 웹 시연 열기](https://jmwshye.github.io/safeloop/)
+
+위 링크를 누르면 브라우저에서 바로 사용할 수 있습니다. 팀원은 Node.js 설치나 로컬 실행이 필요하지 않습니다. 화면 확인은 웹 링크로, 공동 개발은 이 저장소로 진행합니다.
+
+최초 1회 저장소 소유자가 **Settings → Pages → Build and deployment → Source → GitHub Actions**를 선택해야 합니다. GitHub Actions의 **Deploy SafeLoop web** 실행이 성공하면 위 링크가 활성화됩니다. 이미 실패한 실행이 있으면 해당 실행에서 **Re-run all jobs**를 누르세요. 초기 설정을 하지 않았거나 첫 배포가 끝나기 전에는 링크가 404로 표시될 수 있습니다.
+
+이후 `main`에 코드가 반영되면 `.github/workflows/deploy-pages.yml`이 자동으로 웹을 빌드·배포합니다. 브라우저에 저장한 모의 데이터는 사용자별로 분리되며, 웹 공개만으로 Firebase 서버나 Android APK가 배포되지는 않습니다.
+
+## 로컬에서 실행
 
 파일 탐색기에서 `start.bat` 또는 `start.cmd`를 더블클릭하면 준비된 웹 화면이 브라우저에 열립니다. 실행 창은 켜 두세요. Node.js가 필요하며 매번 설치·빌드하지 않습니다. 시작 메시지는 `start.log`에 남습니다. 코드를 수정한 경우에만 아래 명령으로 다시 빌드하세요.
 
@@ -68,3 +79,4 @@ npm run build
 Git을 설치하지 않은 경우 저장소의 `Code` → `Download ZIP`으로 받고 압축을 푼 뒤, 그 폴더에서 `npm ci`, `npm run build`를 실행하면 됩니다. Node.js 22 이상이 필요합니다. 코드를 바꾸면 다시 빌드해야 화면에 반영됩니다.
 
 기본 모드는 모의 데이터 시연이며 각 브라우저의 기록은 별도로 저장됩니다. Android APK와 Firebase 실서버가 배포된 상태는 아닙니다. 실제 계정·푸시·기기 간 공유는 `docs/SETUP.md`에 따라 별도로 연결해야 합니다. `.env.local`, `google-services.json`, 서비스 계정 키, Android 서명 키를 GitHub에 올리지 마세요.
+

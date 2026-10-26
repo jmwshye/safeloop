@@ -27,3 +27,4 @@ android/.idea/
 android/captures/
 *.jks
 *.keystore
+.pages-preview/
