@@ -52,3 +52,19 @@ npm --prefix functions run check
 
 한국어 PDF에는 Google Fonts Noto Sans KR(OFL 라이선스)을 포함했습니다. Firebase 서버의 PDF 3종과 원본 JSON을 함께 내보낼 수 있습니다. 웹 시연 보고서는 인쇄 창에서 PDF로 저장합니다.
 
+
+## GitHub에서 처음 받은 팀원
+
+GitHub 저장소에는 설치 캐시와 빌드 결과 `dist`가 포함되지 않습니다. 아래 순서로 최초 1회 설치·빌드한 뒤 실행하세요. ZIP 산출물에는 `dist`가 포함되어 바로 실행할 수 있습니다.
+
+```powershell
+git clone https://github.com/jmwshye/safeloop.git
+cd safeloop
+npm ci
+npm run build
+.\start.bat
+```
+
+Git을 설치하지 않은 경우 저장소의 `Code` → `Download ZIP`으로 받고 압축을 푼 뒤, 그 폴더에서 `npm ci`, `npm run build`를 실행하면 됩니다. Node.js 22 이상이 필요합니다. 코드를 바꾸면 다시 빌드해야 화면에 반영됩니다.
+
+기본 모드는 모의 데이터 시연이며 각 브라우저의 기록은 별도로 저장됩니다. Android APK와 Firebase 실서버가 배포된 상태는 아닙니다. 실제 계정·푸시·기기 간 공유는 `docs/SETUP.md`에 따라 별도로 연결해야 합니다. `.env.local`, `google-services.json`, 서비스 계정 키, Android 서명 키를 GitHub에 올리지 마세요.

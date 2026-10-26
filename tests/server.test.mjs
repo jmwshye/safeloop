@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {hash,canonical,verifyEvents,cleanLocation} from '../functions/src/domain.js';
+test('server canonical hash ignores object key insertion order',()=>{assert.equal(hash({b:2,a:1}),hash({a:1,b:2}))});
+test('server hash chain rejects tampering',()=>{const a={id:'a',sequence:1,previousHash:'GENESIS',detail:{wage:180000}};a.hash=hash(a);const b={id:'b',sequence:2,previousHash:a.hash};b.hash=hash(b);assert.ok(verifyEvents([a,b]));assert.ok(!verifyEvents([{...a,id:'edited'},b]));assert.ok(!verifyEvents([b]))});
+test('GPS preserves uncertainty and rejects invalid input',()=>{assert.deepEqual(cleanLocation({lat:37,lng:127,accuracy:25}),{lat:37,lng:127,accuracy:25});assert.throws(()=>cleanLocation({lat:200,lng:127,accuracy:2}));assert.throws(()=>cleanLocation({lat:37,lng:127,accuracy:-1}));assert.equal(cleanLocation(null),null)});

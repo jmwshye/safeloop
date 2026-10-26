@@ -1,0 +1,5 @@
+import {hash} from './functions/src/domain.js';
+import {writeFile} from 'node:fs/promises';
+import {makePdf} from './functions/src/pdf.js';
+const section={target:'김민수 · 시연 자료',verified:true,shifts:[{day:'2026-10-26',start:'2026-10-26T07:50:00+09:00',end:'2026-10-26T17:00:00+09:00',wage:180000}],events:[{id:'sample-attendance',type:'attendance',actor:'김민수',source:'human_statement',deviceTime:'2026-10-26T07:50:00+09:00',serverTime:'2026-10-25T22:50:01Z',detail:{message:'시연용 출근 기록 · 실제 근로 증빙 아님'},hash:'sample-not-a-real-hash'},{id:'sample-sensor',type:'sensor',actor:'김민수',source:'system_estimate',serverTime:'2026-10-26T02:20:08Z',detail:{message:'강한 충격 후보 · 모의 시험 데이터'},hash:'sample-not-a-real-hash'}]};let previous='GENESIS';section.events=section.events.map((e,i)=>{const {hash:old,...body}=e;body.sequence=i+1;body.previousHash=previous;const out={...body,hash:hash(body)};previous=out.hash;return out;});for(const kind of ['work','incident','monthly'])await writeFile(`docs/sample-${kind}.pdf`,await makePdf(kind,[section]));console.log('Generated 3 Korean sample PDFs');
+

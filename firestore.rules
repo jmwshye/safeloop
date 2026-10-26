@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function own(uid) { return request.auth != null && request.auth.uid == uid; }
+  function member(site) { return request.auth != null && exists(/databases/$(database)/documents/sites/$(site)/members/$(request.auth.uid)); }
+  function manager(site) { return member(site) && get(/databases/$(database)/documents/sites/$(site)/members/$(request.auth.uid)).data.role == 'manager'; }
+  match /users/{uid} {
+   allow read: if own(uid); allow write: if false;
+   match /events/{event} { allow read: if own(uid); allow write: if false; }
+   match /shifts/{shift} { allow read: if own(uid); allow write: if false; }
+  }
+  match /sites/{site} {
+   allow read: if member(site); allow write: if false;
+   match /members/{uid} { allow read: if member(site); allow write: if false; }
+   match /risks/{risk} { allow read: if member(site); allow write: if false; }
+   match /riskPrivate/{risk} { allow read, write: if false; }
+   match /calls/{call} { allow read: if member(site) && (resource.data.subject == request.auth.uid || request.auth.uid in resource.data.recipients || manager(site)); allow write: if false; }
+   match /photos/{photo} { allow read: if member(site) && request.auth.uid in resource.data.viewers; allow write: if false; }
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}

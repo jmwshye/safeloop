@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {webcrypto} from 'node:crypto';
+import {seed,appendEvent,verifyChain,transitionRisk,peerResult,csv} from '../web/src/domain.mjs';
+if(!globalThis.crypto)globalThis.crypto=webcrypto;
+test('attendance does not require safety checklist',async()=>{const s=await appendEvent(seed(),'attendance',{wage:180000});assert.equal(s.events.length,1);assert.deepEqual(s.checks,{});assert.equal(s.events[0].serverTime,null)});
+test('hash chain detects changes, removals and reordering',async()=>{let s=await appendEvent(seed(),'attendance');s=await appendEvent(s,'self_check');assert.equal(await verifyChain(s.events),true);const changed=structuredClone(s.events);changed[0].actor='forged';assert.equal(await verifyChain(changed),false);assert.equal(await verifyChain(s.events.slice(1)),false);assert.equal(await verifyChain([...s.events].reverse()),false)});
+test('correction appends without rewriting original',async()=>{let s=await appendEvent(seed(),'attendance',{wage:180000});const original=JSON.stringify(s.events[0]);s=await appendEvent(s,'correction',{originalId:s.events[0].id,reason:'입력 정정'});assert.equal(JSON.stringify(s.events[0]),original);assert.equal(await verifyChain(s.events),true)});
+test('mismatch never completes; photo and button have different grades',()=>{assert.equal(peerResult('착용','미착용',true).status,'mismatch');assert.equal(peerResult('착용','착용',null).grade,2);assert.equal(peerResult('착용','착용',{}).grade,3)});
+test('risk requires after photo then independent verifier',()=>{const r={status:'open',reporter:'A'};assert.throws(()=>transitionRisk(r,'verify','B'));assert.throws(()=>transitionRisk(r,'resolve','B',null));const fixed=transitionRisk(r,'resolve','B',{hash:'photo'});assert.equal(fixed.status,'resolved');assert.throws(()=>transitionRisk(fixed,'verify','A'));assert.throws(()=>transitionRisk(fixed,'verify','B'));assert.equal(transitionRisk(fixed,'verify','C').status,'verified')});
+test('CSV neutralizes spreadsheet formulas and quotes safely',()=>{const out=csv([['=CMD()','a"b','가나다']]);assert.ok(out.includes("'=CMD()"));assert.ok(out.includes('a""b'));assert.ok(out.startsWith('\uFEFF'))});
+test('sensor inference remains separate from human confirmation',async()=>{const s=await appendEvent(seed(),'sensor');assert.equal(s.events[0].source,'system_estimate');const t=await appendEvent(s,'response');assert.equal(t.events[1].source,'human_statement')});

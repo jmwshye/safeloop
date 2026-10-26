@@ -1,0 +1,1 @@
+{"indexes":[{"collectionGroup":"events","queryScope":"COLLECTION","fields":[{"fieldPath":"siteId","order":"ASCENDING"},{"fieldPath":"sequence","order":"ASCENDING"}]}],"fieldOverrides":[]}

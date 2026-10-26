@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+ match /b/{bucket}/o {
+  match /photos/{site}/{uid}/{photo} {
+   allow create: if request.auth != null && request.auth.uid == uid && request.resource.size < 5 * 1024 * 1024 && request.resource.contentType.matches('image/jpeg') && firestore.exists(/databases/(default)/documents/sites/$(site)/members/$(uid));
+   allow read, update, delete: if false;
+  }
+  match /reports/{uid}/{report} { allow read: if request.auth != null && request.auth.uid == uid; allow write: if false; }
+  match /{allPaths=**} { allow read, write: if false; }
+ }
+}
