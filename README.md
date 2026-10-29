@@ -1,6 +1,6 @@
 # 안전고리 SafeLoop
 
-프로젝트 헌장(44쪽)과 기존 화면 시안을 바탕으로 작성한 캡스톤 MVP 소스입니다.
+안전고리 관리자 대시보드와 공유 Firebase 백엔드 저장소입니다. 작업자 앱은 별도 [Android 저장소](https://github.com/jmwshye/safeloop-app-)에서 개발합니다.
 
 
 ## 설치 없이 웹 화면 보기
@@ -24,7 +24,7 @@ npm run preview -- --port 5174
 ```
 
 - 기본 실행은 **로컬 시연**입니다. 김민수 작업자와 4명의 동료, 초기 위험·근로 기록은 모의 자료입니다.
-- 오른쪽 위 **작업자 앱**으로 전환하면 출퇴근, 점검, 동료 확인, 긴급 시연을 수행합니다.
+- 작업자 웹 화면과 역할 전환 기능을 제거했습니다. 출퇴근·점검·동료 확인은 별도 Android 앱에서 수행합니다.
 - 시연 기록은 브라우저에 저장됩니다. 다른 브라우저나 기기로 자동 동기화되지 않습니다.
 - **실제 Firebase 모드**는 `.env.example`을 `.env.local`로 복사하고 Firebase 설정을 입력한 뒤 다시 빌드하면 활성화됩니다.
 
@@ -32,10 +32,10 @@ npm run preview -- --port 5174
 
 | 경로 | 내용 |
 | --- | --- |
-| `web/src/` | React 관리자 웹, 작업자 웹 시연, Firebase 연결 모드 |
+| `web/src/` | React 관리자 웹, Firebase 연결 모드 |
 | `functions/src/` | Firebase 인증 검증, 현장 참여, 서버 이벤트, 해시, 위험 처리, FCM·Cloud Tasks, PDF |
 | `firestore.rules`, `storage.rules` | 클라이언트 원본 수정 금지, 역할·당사자 접근 제한 |
-| `android/` | Kotlin·Jetpack Compose 작업자 앱, 가속도 감시 서비스, FCM, 카메라 촬영 |
+| 별도 `safeloop-app-` 저장소 | Kotlin·Jetpack Compose 작업자 앱, 가속도 감시 서비스, FCM, 카메라 촬영 |
 | `tests/` | 근로·안전 규칙과 해시 체인 테스트 |
 | `docs/SETUP.md` | Firebase·Android 설정과 실행 절차 |
 | `docs/REQUIREMENTS.md` | 헌장 요구사항 대응표와 남은 검증 |
@@ -49,7 +49,13 @@ npm run preview -- --port 5174
 
 ## 현재 상태
 
-웹 시연은 실행·빌드 가능한 결과입니다. Firebase와 Android 소스도 제공하지만, **Firebase 프로젝트의 실제 배포·기기 간 알림·Android APK 빌드·잠금 화면 센서는 이 환경에서 검증하지 못했습니다.** 실제 현장용 완성품으로 검증된 상태가 아닙니다. 상세 상태는 `docs/VALIDATION.md`를 확인하세요.
+### Android 안전 확인 흐름 확장
+
+휴대폰 움직임 감지 → 본인 확인 → 15초 무응답 시 같은 구역 동료 호출 → 수락·현장 도착 → 주변 사진 제출 후 안전 확인 완료 흐름을 추가했습니다. 관리자 Firebase 연결 화면에서 진행 상태와 확인 사진을 조회합니다. 워치 앱은 개발 범위에 포함하지 않습니다.
+
+Android 소스와 APK 빌드 워크플로는 [작업자 앱 저장소](https://github.com/jmwshye/safeloop-app-)로 분리했습니다. **[iPhone 사용자용 PC 시연·기기 간 검증 안내](docs/ANDROID_DEMO.md)**를 참고하세요. 시연 모드와 실제 서버 연결 모드의 검증 범위를 구분합니다.
+
+관리자 웹 빌드와 회귀 테스트를 완료했습니다. 별도 작업자 앱은 Android 빌드·단위 테스트·에뮬레이터 실행과 사진 확인 흐름까지 검증했습니다. **Firebase 실제 통합·기기 간 알림·실기기 센서 정확도·잠금 화면 센서는 아직 검증하지 못했습니다.** 상세 상태는 `docs/VALIDATION.md`와 앱 저장소의 검증 기록을 확인하세요.
 
 사진 캡처는 HTTPS 또는 localhost와 카메라 권한이 필요합니다. 시연 모드에서 사진과 기록은 같은 브라우저에 남습니다. 현장 개인정보 대신 팀원·모의 데이터로 시험하세요.
 
@@ -79,4 +85,3 @@ npm run build
 Git을 설치하지 않은 경우 저장소의 `Code` → `Download ZIP`으로 받고 압축을 푼 뒤, 그 폴더에서 `npm ci`, `npm run build`를 실행하면 됩니다. Node.js 22 이상이 필요합니다. 코드를 바꾸면 다시 빌드해야 화면에 반영됩니다.
 
 기본 모드는 모의 데이터 시연이며 각 브라우저의 기록은 별도로 저장됩니다. Android APK와 Firebase 실서버가 배포된 상태는 아닙니다. 실제 계정·푸시·기기 간 공유는 `docs/SETUP.md`에 따라 별도로 연결해야 합니다. `.env.local`, `google-services.json`, 서비스 계정 키, Android 서명 키를 GitHub에 올리지 마세요.
-

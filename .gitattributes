@@ -1,3 +1,4 @@
 # Preserve Windows launchers when cloned on any operating system.
 *.bat text eol=crlf
 *.cmd text eol=crlf
+android/gradlew text eol=lf

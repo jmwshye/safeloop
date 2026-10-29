@@ -15,7 +15,7 @@
 3. 웹 공개 설정을 `.env.local`에 입력합니다. `VITE_` 값은 클라이언트 공개 설정입니다. 서비스 계정 비밀키를 넣지 마세요.
 4. `npm --prefix functions install`을 실행합니다. Firebase CLI에서 본인 계정으로 로그인하고 프로젝트를 선택합니다.
 5. `firebase deploy --only firestore:rules,firestore:indexes,storage,functions --project <본인 프로젝트 ID>`로 배포합니다. 실제 배포는 이 작업에서 수행하지 않았습니다.
-6. Cloud Tasks 함수 `selfTimeout`, `peerTimeout`에 대해 런타임 서비스 계정의 큐 enqueue 및 함수 invoke 권한을 검토합니다. 에뮬레이터는 실제 FCM·Cloud Tasks 전달을 재현하지 않습니다.
+6. Cloud Tasks 함수 `selfTimeout`, `peerTimeout`, `visitTimeout`에 대해 런타임 서비스 계정의 큐 enqueue 및 함수 invoke 권한을 검토합니다. 에뮬레이터는 실제 FCM·Cloud Tasks 전달을 재현하지 않습니다.
 7. 웹을 다시 빌드해 서버 연결 모드로 실행합니다. 계정을 생성하고 현장을 만들면 생성한 계정이 그 현장의 manager가 됩니다. 현장 코드는 현장 생성 응답에 표시됩니다. 현장 ID도 관리자 화면에 표시됩니다.
 8. 다른 계정은 코드를 입력해 작업자로 참여합니다. 새 계정이 기존 관리자 역할을 덮어쓸 수 없도록 서버에서 기존 멤버를 보존합니다.
 
@@ -34,16 +34,16 @@ Storage의 브라우저 `getBlob` 다운로드에는 배포 도메인의 CORS �
 
 ## 3. Android
 
-1. Android Studio에서 `android/`를 엽니다. **JDK 17+, Android SDK 35, Gradle 8.9**가 필요합니다. 이 PC는 JDK 11만 확인되어 앱 빌드를 수행하지 않았습니다.
-2. Firebase Console에서 받은 `google-services.json`을 `android/app/`에 넣습니다. 없으면 앱은 Firebase 설정 필요 화면을 표시합니다.
-3. Android Studio에서 Gradle 8.9를 사용하도록 설정하거나 설치한 Gradle에서 `gradle wrapper --gradle-version 8.9`를 실행해 wrapper를 생성합니다. wrapper JAR는 이 산출물에 포함하지 않았습니다.
-4. `gradle :app:assembleDebug` 또는 Android Studio Run으로 팀원 기기에 설치합니다.
+1. 별도 `safeloop-app-` 저장소를 받고 Android Studio에서 저장소 최상위 폴더를 엽니다. **JDK 17, Android SDK 35, Gradle 8.9**를 사용합니다. 최신 검증 결과는 `VALIDATION.md`를 확인하세요.
+2. Firebase Console에서 받은 `google-services.json`을 앱 저장소의 `app/`에 넣습니다. 없으면 앱은 서버 없는 시연 모드로 실행됩니다. `ANDROID_DEMO.md`에서 iPhone 사용자용 PC 시연 절차를 확인하세요.
+3. Android Studio에서 프로젝트에 포함된 Gradle wrapper 8.9와 JDK 17을 사용하도록 설정합니다. wrapper JAR와 실행 스크립트를 포함했습니다.
+4. `./gradlew :app:assembleDebug` (Windows는 `gradlew.bat :app:assembleDebug`) 또는 Android Studio Run으로 팀원 기기에 설치합니다.
 5. 로그인·현장 참여 후 알림·카메라·출근 위치 권한을 요청할 때 직접 선택합니다.
-6. 고위험 작업 시작 시 visible foreground service가 선형가속도계를 감시합니다. 약 3g 충격 후 7초간 움직임 감소 비율로 후보를 만듭니다. 기압계는 사용하지 않으며 GPS는 상시 수집하지 않습니다. 임계값은 검증되지 않은 시험 가정입니다.
+6. 움직임 감시 시작 시 visible foreground service가 선형가속도계를 감시합니다. 약 3g 충격 후 7초간 움직임 감소 비율로 후보를 만듭니다. 기압계는 사용하지 않으며 GPS는 상시 수집하지 않습니다. 임계값은 검증되지 않은 시험 가정입니다.
 7. 감지 시 서버의 15초 응답 대기를 시작합니다. 통신 실패 시 로컬 알림에 실패 사실을 표시합니다. 동료 호출의 전달은 보장되지 않으므로 직접 연락·119 경로가 필요합니다.
 8. FCM은 data payload로 발송하고 수신, 열람, 수락을 각기 기록합니다. 앱 강제 종료, 절전, 잠금 화면, 통신 단절에서 실기기 2대 이상으로 검증하세요.
 
-Foreground service는 `specialUse`로 선언했습니다. 실제 배포 전 사용 목적에 대한 Play Console 심사와 권한 적합성을 확인해야 합니다. 고위험 작업 모드를 명시적으로 시작할 때만 실행하며 재부팅 자동 시작은 없습니다. 서비스 종료·앱 강제 종료 후 복구, 기기 상태 heartbeat는 추가 구현·검증 대상입니다.
+Foreground service는 `specialUse`로 선언했습니다. 실제 배포 전 사용 목적에 대한 Play Console 심사와 권한 적합성을 확인해야 합니다. 움직임 감시를 명시적으로 시작할 때만 실행하며 재부팅 자동 시작은 없습니다. 서비스 종료·앱 강제 종료 후 복구, 기기 상태 heartbeat는 추가 구현·검증 대상입니다.
 
 ## 4. 검증 시나리오
 
@@ -59,4 +59,3 @@ Foreground service는 `specialUse`로 선언했습니다. 실제 배포 전 사�
 - [Firestore Rules 및 Admin SDK 우회](https://firebase.google.com/docs/firestore/security/get-started)
 - [Firebase Cloud Tasks](https://firebase.google.com/docs/functions/task-functions)
 - [Android Foreground service 유형](https://developer.android.com/develop/background-work/services/fgs/service-types)
-

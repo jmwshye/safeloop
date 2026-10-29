@@ -5,6 +5,7 @@ dist/
 functions/lib/
 functions/node_modules/
 android/.gradle/
+android/.kotlin/
 android/local.properties
 android/**/build/
 .openai/*.zip
@@ -12,6 +13,7 @@ android/**/build/
 *-debug.log
 # Local browser QA uses the installed runtime; generated developer-only artifacts.
 qa*.mjs
+!scripts/qa-admin.mjs
 debug-ui.mjs
 docs/debug.png
 docs/audit-web.json
