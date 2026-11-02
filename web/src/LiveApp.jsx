@@ -27,6 +27,8 @@ import { Tag, Stat } from "./Dashboard.jsx";
 import { CameraCapture, Modal } from "./Flows.jsx";
 import {
   createApi,
+  createPhotoSubmission,
+  createSiteSubmission,
   readSession,
   sessionKey,
   sitePath,
@@ -130,24 +132,25 @@ const nav = [
 function useRemote(load, deps, interval = 0) {
   const loader = useRef(load);
   loader.current = load;
-  const [state, setState] = useState({
-      data: null,
-      error: null,
-      loading: true,
-    }),
-    [version, setVersion] = useState(0);
+  const [state, setState] = useState(null);
+  const [version, setVersion] = useState(0);
+  const scope = useMemo(() => ({}), [...deps, version, interval]);
   useEffect(() => {
     let active = true,
       timer;
     const controller = new AbortController();
-    setState({ data: null, error: null, loading: true });
     async function tick() {
       try {
         const data = await loader.current(controller.signal);
-        if (active) setState({ data, error: null, loading: false });
+        if (active) setState({ scope, data, error: null, loading: false });
       } catch (error) {
         if (active && !controller.signal.aborted)
-          setState((previous) => ({ ...previous, error, loading: false }));
+          setState((previous) => ({
+            scope,
+            data: previous?.scope === scope ? previous.data : null,
+            error,
+            loading: false,
+          }));
       } finally {
         if (active && interval) timer = setTimeout(tick, interval);
       }
@@ -158,8 +161,10 @@ function useRemote(load, deps, interval = 0) {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [...deps, version, interval]);
-  return { ...state, reload: () => setVersion((v) => v + 1) };
+  }, [scope]);
+  const current =
+    state?.scope === scope ? state : { data: null, error: null, loading: true };
+  return { ...current, reload: () => setVersion((v) => v + 1) };
 }
 function Remote({ resource, children }) {
   return (
@@ -216,14 +221,14 @@ function Photo({ api, siteId, id, label }) {
       return;
     }
     const value = URL.createObjectURL(image.data);
-    setUrl(value);
+    setUrl({ value, blob: image.data });
     return () => URL.revokeObjectURL(value);
   }, [image.data]);
   return (
     <figure className="server-photo">
       <figcaption>{label}</figcaption>
-      {url ? (
-        <img src={url} alt={label} />
+      {url && url.blob === image.data ? (
+        <img src={url.value} alt={label} />
       ) : image.error ? (
         <p role="alert">사진을 열 수 없어요.</p>
       ) : (
@@ -426,15 +431,19 @@ function Workspace({ api, user, logout }) {
     [creating, setCreating] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
-  const site = sites.data?.sites.find((item) => item.id === selected);
   const managers =
     sites.data?.sites.filter((item) => item.role === "foreman") || [];
-  useEffect(() => {
-    if (!sites.data) return;
-    if (selected && !sites.data.sites.some((item) => item.id === selected))
-      setSelected("");
-    if (!selected && managers.length) setSelected(managers[0].id);
-  }, [sites.data, selected]);
+  const site = selected
+    ? sites.data?.sites.find((item) => item.id === selected)
+    : managers[0];
+  const siteSubmission = useRef(null);
+  const submittingSite = useRef(false);
+  if (!creating && !sites.data && !sites.error)
+    return (
+      <div className="empty" role="status">
+        현장 목록을 불러오는 중…
+      </div>
+    );
   if (creating || !site)
     return (
       <div className="connection-page">
@@ -491,20 +500,25 @@ function Workspace({ api, user, logout }) {
             <form
               onSubmit={async (event) => {
                 event.preventDefault();
-                if (busy) return;
+                if (submittingSite.current) return;
                 const data = new FormData(event.currentTarget);
+                submittingSite.current = true;
                 setBusy(true);
                 try {
+                  siteSubmission.current ??= createSiteSubmission();
                   const result = await api.request("/sites", {
                     method: "POST",
-                    body: siteSettingsBody(data),
+                    body: siteSubmission.current(siteSettingsBody(data)),
                   });
+                  siteSubmission.current = null;
+                  setError("");
                   setSelected(result.site.id);
                   setCreating(false);
                   sites.reload();
                 } catch (error) {
                   setError(error.message);
                 } finally {
+                  submittingSite.current = false;
                   setBusy(false);
                 }
               }}
@@ -515,7 +529,15 @@ function Workspace({ api, user, logout }) {
               </button>
             </form>
             {creating && managers.length > 0 && (
-              <Action secondary onClick={() => setCreating(false)}>
+              <Action
+                secondary
+                disabled={busy}
+                onClick={() => {
+                  siteSubmission.current = null;
+                  setError("");
+                  setCreating(false);
+                }}
+              >
                 돌아가기
               </Action>
             )}
@@ -538,7 +560,11 @@ function Workspace({ api, user, logout }) {
       site={site}
       sites={managers}
       changeSite={setSelected}
-      createSite={() => setCreating(true)}
+      createSite={() => {
+        siteSubmission.current = null;
+        setError("");
+        setCreating(true);
+      }}
       reloadSites={sites.reload}
       logout={logout}
     />
@@ -623,7 +649,7 @@ function SiteWorkspace({
   logout,
 }) {
   const [page, setPage] = useState("dashboard"),
-    [incidentId, setIncidentId] = useState(null),
+    [incidentView, setIncidentView] = useState(null),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
     [version, setVersion] = useState(0),
@@ -671,11 +697,13 @@ function SiteWorkspace({
     busy,
     version,
     workers: workers.data?.workers || [],
-    openIncident: setIncidentId,
+    openIncident: (id, historical = false) =>
+      setIncidentView({ id, historical }),
     navigate: setPage,
     refresh,
   };
-  function dial() {
+  function dial(incidentId) {
+    const openedAt = new Date().toISOString();
     location.href = "tel:119";
     api
       .request(
@@ -684,7 +712,7 @@ function SiteWorkspace({
           : sitePath(site.id, "/dial-intents"),
         {
           method: incidentId ? "PUT" : "POST",
-          body: { requestId: crypto.randomUUID() },
+          body: { requestId: crypto.randomUUID(), openedAt },
           signal: controller.current.signal,
         },
       )
@@ -905,7 +933,7 @@ function SiteWorkspace({
           </small>
         </footer>
       </div>
-      <button className="emergency-fab" onClick={dial}>
+      <button className="emergency-fab" onClick={() => dial()}>
         <Phone size={18} />
         <b>119</b>
         <span>전화 화면 열기</span>
@@ -926,11 +954,13 @@ function SiteWorkspace({
           </Action>
         </Modal>
       )}
-      {incidentId && (
+      {incidentView && (
         <Incident
           {...common}
-          id={incidentId}
-          onClose={() => setIncidentId(null)}
+          key={incidentView.id}
+          id={incidentView.id}
+          historical={incidentView.historical}
+          onClose={() => setIncidentView(null)}
           dial={dial}
         />
       )}
@@ -1187,17 +1217,28 @@ function SafetyRequests({ api, site, version, run, busy }) {
                           <Action
                             disabled={busy}
                             onClick={() =>
-                              run((signal) =>
-                                api.request(
-                                  sitePath(
-                                    site.id,
-                                    "/safety-requests/" +
-                                      item.attendanceId +
-                                      "/acknowledgement",
-                                  ),
-                                  { method: "PUT", body: {}, signal },
-                                ),
-                              )
+                              run(async (signal) => {
+                                try {
+                                  await api.request(
+                                    sitePath(
+                                      site.id,
+                                      "/safety-requests/" +
+                                        item.attendanceId +
+                                        "/acknowledgement",
+                                    ),
+                                    {
+                                      method: "PUT",
+                                      body: {
+                                        expectedRequestedAt: item.requestedAt,
+                                      },
+                                      signal,
+                                    },
+                                  );
+                                } catch (error) {
+                                  if (error.status === 409) requests.reload();
+                                  throw error;
+                                }
+                              })
                             }
                           >
                             요청 확인
@@ -1229,8 +1270,11 @@ function Workers({ api, site, workers, run, busy, ...props }) {
   const [search, setSearch] = useState(""),
     [chosen, setChosen] = useState(null),
     [buddy, setBuddy] = useState(""),
-    [photo, setPhoto] = useState(null);
+    [capture, setCapture] = useState(null);
   const person = workers.find((item) => item.userId === chosen);
+  const ppeUpload = useMemo(createPhotoSubmission, []);
+  const photo =
+    capture?.attendanceId === person?.attendanceId ? capture?.photo : null;
   const name = (id) =>
     id === site.foremanId
       ? site.foremanName
@@ -1324,7 +1368,7 @@ function Workers({ api, site, workers, run, busy, ...props }) {
                       onClick={() => {
                         setChosen(worker.userId);
                         setBuddy(worker.buddyUserId || "");
-                        setPhoto(null);
+                        setCapture(null);
                       }}
                     >
                       관리
@@ -1398,8 +1442,11 @@ function Workers({ api, site, workers, run, busy, ...props }) {
                 <hr />
                 <h3>반장 보호구 확인</h3>
                 <CameraCapture
+                  key={person.attendanceId}
                   value={photo}
-                  onChange={setPhoto}
+                  onChange={(photo) =>
+                    setCapture({ attendanceId: person.attendanceId, photo })
+                  }
                   label="보호구만 촬영 · 선택"
                 />
                 <div className="inline">
@@ -1407,18 +1454,19 @@ function Workers({ api, site, workers, run, busy, ...props }) {
                     disabled={busy}
                     onClick={() =>
                       run(async (signal) => {
-                        let photoId;
-                        if (photo) {
-                          const blob = await (
-                            await fetch(photo.data, { signal })
-                          ).blob();
-                          const file = new File([blob], "ppe.jpg", {
-                            type: blob.type,
-                          });
-                          photoId = (
-                            await api.upload(site.id, "ppe", file, signal)
-                          ).photo.id;
-                        }
+                        const photoId = await ppeUpload(
+                          person.attendanceId,
+                          photo,
+                          async () => {
+                            const blob = await (
+                              await fetch(photo.data, { signal })
+                            ).blob();
+                            const file = new File([blob], "ppe.jpg", {
+                              type: blob.type,
+                            });
+                            return api.upload(site.id, "ppe", file, signal);
+                          },
+                        );
                         await api.request(
                           "/attendances/" + person.attendanceId + "/peer-check",
                           {
@@ -1579,6 +1627,7 @@ function Risks(props) {
       {selected && (
         <RiskDetailLive
           {...props}
+          key={selected}
           id={selected}
           onClose={() => setSelected(null)}
         />
@@ -1683,6 +1732,7 @@ function RiskDetailLive({
   );
   const [file, setFile] = useState(null),
     [assignee, setAssignee] = useState("");
+  const upload = useMemo(createPhotoSubmission, []);
   return (
     <Modal title="위험 신고 · 조치" onClose={onClose}>
       <Remote resource={resource}>
@@ -1720,7 +1770,10 @@ function RiskDetailLive({
               {risk.verifierName || "미기록"}
             </p>
             <p>
-              신고 {time(risk.createdAt)} · 신고자 이름 비공개
+              신고 {time(risk.createdAt)} ·{" "}
+              {risk.anonymous
+                ? "신고자 이름 비공개"
+                : "신고자 " + (risk.reporterName || "미기록")}
               {risk.status === "open" && " · " + elapsedSince(risk.createdAt)}
               <br />
               조치 {time(risk.fixedAt)}
@@ -1769,17 +1822,14 @@ function RiskDetailLive({
                   disabled={busy || !file}
                   onClick={() =>
                     run(async (signal) => {
-                      const uploaded = await api.upload(
-                        site.id,
-                        "risk_after",
-                        file,
-                        signal,
+                      const afterPhotoId = await upload(id, file, () =>
+                        api.upload(site.id, "risk_after", file, signal),
                       );
                       await api.request(
                         sitePath(site.id, "/risks/" + id + "/fix"),
                         {
                           method: "PUT",
-                          body: { afterPhotoId: uploaded.photo.id },
+                          body: { afterPhotoId },
                           signal,
                         },
                       );
@@ -1961,8 +2011,7 @@ function SafetyTimeline({ api, site, user, workers, version, run, busy }) {
                               label="확인 사진"
                             />
                           )}
-                          {(event.actorId === user.id ||
-                            event.subjectId === user.id) && (
+                          {event.canRequestCorrection && (
                             <Action
                               secondary
                               onClick={() => setCorrect(event.id)}
@@ -2269,7 +2318,20 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
     [from, setFrom] = useState(() => day().slice(0, 7) + "-01"),
     [to, setTo] = useState(day),
     [offset, setOffset] = useState(0),
-    [preview, setPreview] = useState(null);
+    [previewPath, setPreviewPath] = useState(null);
+  const selectedPath = workReportPath(site.id, {
+    month,
+    from: range ? from : undefined,
+    to: range ? to : undefined,
+    target,
+  });
+  const preview = useRemote(
+    (signal) =>
+      previewPath
+        ? api.request(previewPath, { signal })
+        : Promise.resolve(null),
+    [api, previewPath, version],
+  );
   const incidents = useRemote(
     (signal) =>
       api.request(
@@ -2315,7 +2377,7 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
             onChange={(event) => {
               setMonth(event.target.value);
               setOffset(0);
-              setPreview(null);
+              setPreviewPath(null);
             }}
           />
         </label>
@@ -2332,7 +2394,7 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
               value={target}
               onChange={(event) => {
                 setTarget(event.target.value);
-                setPreview(null);
+                setPreviewPath(null);
               }}
             >
               <option value="all">전체 작업자</option>
@@ -2350,7 +2412,7 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
               checked={range}
               onChange={(event) => {
                 setRange(event.target.checked);
-                setPreview(null);
+                setPreviewPath(null);
               }}
             />
           </label>
@@ -2363,7 +2425,7 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
                   value={from}
                   onChange={(event) => {
                     setFrom(event.target.value);
-                    setPreview(null);
+                    setPreviewPath(null);
                   }}
                 />
               </label>
@@ -2374,7 +2436,7 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
                   value={to}
                   onChange={(event) => {
                     setTo(event.target.value);
-                    setPreview(null);
+                    setPreviewPath(null);
                   }}
                 />
               </label>
@@ -2405,23 +2467,11 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
           </div>
           <Action
             secondary
-            disabled={busy}
+            disabled={busy || (range && (!from || !to || from > to))}
             onClick={() =>
-              run(
-                async (signal) =>
-                  setPreview(
-                    await api.request(
-                      workReportPath(site.id, {
-                        month,
-                        from: range ? from : undefined,
-                        to: range ? to : undefined,
-                        target,
-                      }),
-                      { signal },
-                    ),
-                  ),
-                "선택한 근로 기록을 조회했어요.",
-              )
+              previewPath === selectedPath
+                ? preview.reload()
+                : setPreviewPath(selectedPath)
             }
           >
             기록 미리 보기
@@ -2453,47 +2503,51 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
           </div>
         </section>
       </div>
-      {preview && (
-        <section className="panel">
-          <div className="panel-heading">
-            <h2>선택한 근로 기록</h2>
-            <Action secondary onClick={() => setPreview(null)}>
-              닫기
-            </Action>
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>작업자</th>
-                  <th>날짜</th>
-                  <th>직종·구역</th>
-                  <th>출근·퇴근</th>
-                  <th>예상 일당</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preview.shifts.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.name}</td>
-                    <td>{row.workDate}</td>
-                    <td>
-                      {row.occupation || "미등록"} · {row.zone || "미등록"}
-                    </td>
-                    <td>
-                      {time(row.checkedInAt)} / {time(row.checkedOutAt)}
-                    </td>
-                    <td>{money(row.expectedWage)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {!preview.shifts.length && <Empty />}
-          {preview.dataGaps.length > 0 && (
-            <p className="notice amber">{preview.dataGaps.join(" · ")}</p>
+      {previewPath === selectedPath && (
+        <Remote resource={preview}>
+          {(data) => (
+            <section className="panel">
+              <div className="panel-heading">
+                <h2>선택한 근로 기록</h2>
+                <Action secondary onClick={() => setPreviewPath(null)}>
+                  닫기
+                </Action>
+              </div>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>작업자</th>
+                      <th>날짜</th>
+                      <th>직종·구역</th>
+                      <th>출근·퇴근</th>
+                      <th>예상 일당</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.shifts.map((row) => (
+                      <tr key={row.id}>
+                        <td>{row.name}</td>
+                        <td>{row.workDate}</td>
+                        <td>
+                          {row.occupation || "미등록"} · {row.zone || "미등록"}
+                        </td>
+                        <td>
+                          {time(row.checkedInAt)} / {time(row.checkedOutAt)}
+                        </td>
+                        <td>{money(row.expectedWage)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {!data.shifts.length && <Empty />}
+              {data.dataGaps.length > 0 && (
+                <p className="notice amber">{data.dataGaps.join(" · ")}</p>
+              )}
+            </section>
           )}
-        </section>
+        </Remote>
       )}
       <section className="panel">
         <div className="panel-heading">
@@ -2524,7 +2578,7 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
                         <td>
                           <Action
                             secondary
-                            onClick={() => openIncident(incident.id)}
+                            onClick={() => openIncident(incident.id, true)}
                           >
                             상세 보기
                           </Action>
@@ -2588,7 +2642,18 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
   );
 }
 
-function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
+function Incident({
+  api,
+  site,
+  user,
+  id,
+  historical,
+  version,
+  run,
+  busy,
+  onClose,
+  dial,
+}) {
   const resource = useRemote(
     (signal) => api.request("/incidents/" + id, { signal }),
     [api, id, version],
@@ -2600,17 +2665,19 @@ function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
     [receiptError, setReceiptError] = useState("");
   const incident = resource.data?.incident,
     contact = incident?.recipients.find((item) => item.userId === user.id);
+  const upload = useMemo(createPhotoSubmission, []);
   useEffect(() => {
-    if (!contact || contact.openedAt) return;
+    if (
+      historical ||
+      !contact ||
+      contact.openedAt ||
+      incident.closedAt ||
+      incident.status === "closed"
+    )
+      return;
     const controller = new AbortController();
     (async () => {
       try {
-        if (!contact.receivedAt)
-          await api.request("/incidents/" + id + "/receipt", {
-            method: "PUT",
-            body: { stage: "received" },
-            signal: controller.signal,
-          });
         await api.request("/incidents/" + id + "/receipt", {
           method: "PUT",
           body: { stage: "opened" },
@@ -2622,7 +2689,15 @@ function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
       }
     })();
     return () => controller.abort();
-  }, [api, id, contact?.userId, contact?.receivedAt, contact?.openedAt]);
+  }, [
+    api,
+    id,
+    historical,
+    incident?.closedAt,
+    incident?.status,
+    contact?.userId,
+    contact?.openedAt,
+  ]);
   const command = (suffix, body = {}) =>
     run((signal) =>
       api.request("/incidents/" + id + suffix, { method: "PUT", body, signal }),
@@ -2663,7 +2738,7 @@ function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
             </p>
             {receiptError && (
               <div className="notice amber" role="alert">
-                수신·열람 기록: {receiptError}
+                열람 기록: {receiptError}
               </div>
             )}
             <div className="table-wrap">
@@ -2751,7 +2826,7 @@ function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
                 >
                   다시 호출
                 </Action>
-                <Action secondary onClick={dial}>
+                <Action secondary onClick={() => dial(c.id)}>
                   119 전화 화면 열기
                 </Action>
               </div>
@@ -2814,16 +2889,14 @@ function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
                       disabled={busy || !reason}
                       onClick={() =>
                         run(async (signal) => {
-                          const photoId = photo
-                            ? (
-                                await api.upload(
-                                  site.id,
-                                  "incident_scene",
-                                  photo,
-                                  signal,
-                                )
-                              ).photo.id
-                            : undefined;
+                          const photoId = await upload(id, photo, () =>
+                            api.upload(
+                              site.id,
+                              "incident_scene",
+                              photo,
+                              signal,
+                            ),
+                          );
                           await api.request(
                             "/incidents/" + id + "/resolution",
                             {
@@ -2843,12 +2916,18 @@ function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
             )}
             <div className="settings-row">
               <span>현장 도착</span>
-              <b>{time(c.arrivedAt)}</b>
+              <b>
+                {c.resolution === "worker_confirmed_okay" && !c.arrivedAt
+                  ? "출동 대상 아님"
+                  : time(c.arrivedAt)}
+              </b>
             </div>
             <div className="settings-row">
               <span>관찰</span>
               <b>
-                {text(c.observation)} · {time(c.observedAt)}
+                {c.resolution === "worker_confirmed_okay" && !c.observedAt
+                  ? "출동 대상 아님"
+                  : text(c.observation) + " · " + time(c.observedAt)}
               </b>
             </div>
             {c.closedAt && (
@@ -2869,7 +2948,12 @@ function Incident({ api, site, user, id, version, run, busy, onClose, dial }) {
               마칠 수 있어요.
             </p>
             <div className="inline">
-              <Action secondary onClick={dial}>
+              <Action
+                secondary
+                onClick={() =>
+                  dial(c.closedAt || c.status === "closed" ? null : c.id)
+                }
+              >
                 <Phone size={16} />
                 119 전화 화면 열기
               </Action>

@@ -244,6 +244,28 @@ export function siteSettingsBody(form) {
     shiftChangeTime: value("shiftChangeTime") || null,
   };
 }
+
+// One form submission may need to retry after the server already saved it.
+export function createSiteSubmission() {
+  let previous;
+  return (fields) => {
+    const key = JSON.stringify(fields);
+    if (key !== previous?.key)
+      previous = { key, body: { ...fields, requestId: crypto.randomUUID() } };
+    return previous.body;
+  };
+}
+
+export function createPhotoSubmission() {
+  let last;
+  return async (target, source, upload) => {
+    if (!source) return undefined;
+    if (last?.target === target && last.source === source) return last.id;
+    const { photo } = await upload();
+    last = { target, source, id: photo.id };
+    return photo.id;
+  };
+}
 export function query(values) {
   const entries = Object.entries(values).filter(
     ([, v]) => v !== undefined && v !== null && v !== "",

@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createApi,
+  createPhotoSubmission,
+  createSiteSubmission,
   normalizeBaseUrl,
   readSession,
   sessionKey,
@@ -21,6 +23,43 @@ const response = (data, status = 200, headers = {}) =>
     status,
     headers: { "content-type": "application/json", ...headers },
   });
+
+test("현장 생성 응답 유실 시 같은 폼에 같은 요청 ID, 새 이름과 새 폼에는 다른 ID", () => {
+  const submit = createSiteSubmission();
+  const site = { name: "B현장", center: null, foremanPhone: null };
+  const sent = submit(site);
+  assert.deepEqual(submit({ ...site }), sent);
+  assert.notEqual(submit({ ...site, name: "C현장" }).requestId, sent.requestId);
+  assert.notEqual(createSiteSubmission()(site).requestId, sent.requestId);
+});
+
+test("사진 첨부 저장 결과 유실 후 동일 증빙으로 재시도, 다른 촬영과 대상은 새 증빙", async () => {
+  const upload = createPhotoSubmission();
+  let count = 0;
+  const send = async () => ({ photo: { id: "photo-" + ++count } });
+  const first = new File(["first"], "ppe.jpg");
+  const next = new File(["second"], "ppe.jpg");
+  assert.equal(await upload("B", first, send), "photo-1");
+  assert.equal(await upload("B", first, send), "photo-1");
+  assert.equal(await upload("B", next, send), "photo-2");
+  assert.equal(await upload("C", next, send), "photo-3");
+  assert.equal(await upload("C", null, send), undefined);
+  assert.equal(count, 3);
+});
+
+test("사진 업로드 자체가 실패하면 다음 시도에서 다시 전송", async () => {
+  const upload = createPhotoSubmission();
+  const file = new File(["image"], "scene.jpg");
+  await assert.rejects(
+    upload("case", file, async () => {
+      throw Error("offline");
+    }),
+  );
+  assert.equal(
+    await upload("case", file, async () => ({ photo: { id: "recovered" } })),
+    "recovered",
+  );
+});
 
 test("현장 설정에 좌표·시간과 명시적 초기화 값을 보존", () => {
   const filled = new URLSearchParams({
