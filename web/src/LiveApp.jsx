@@ -990,6 +990,7 @@ function eventLabel(type) {
     "incident.signal_detected": "이상 움직임 감지",
     "incident.worker_unanswered": "본인 15초 무응답",
     "incident.response_delayed": "호출 확인 지연",
+    "incident.responder_unavailable": "수락자 대응 불가 · 다른 동료 요청",
     "incident.verification_overdue":
       "수락 후 2분간 현장 상태 미확인 · 반장 확인 요청",
     "incident.contacts_requested": "동료·반장 호출",

@@ -140,8 +140,8 @@ try {
           },
           {
             id: "other",
-            type: "risk.reported",
-            source: "human",
+            type: "incident.responder_unavailable",
+            source: "system",
             recordedAt: date,
             canRequestCorrection: false,
           },
@@ -238,6 +238,7 @@ try {
   await close();
 
   await navigate("안전 타임라인");
+  await page.getByText("수락자 대응 불가 · 다른 동료 요청", { exact: true }).waitFor();
   await button("정정 요청").waitFor();
   assert.equal(await button("정정 요청").count(), 1);
   await navigate("보고서");
