@@ -4,10 +4,10 @@ dist/
 .env.local
 functions/lib/
 functions/node_modules/
-android/.gradle/
-android/.kotlin/
-android/local.properties
-android/**/build/
+**/android/.gradle/
+**/android/.kotlin/
+**/android/local.properties
+**/android/**/build/
 .openai/*.zip
 .firebase/
 *-debug.log
@@ -19,14 +19,14 @@ docs/debug.png
 docs/audit-web.json
 start.log
 # Firebase and developer-local configuration
-android/app/google-services.json
+**/google-services.json
 service-account*.json
 **/service-account*.json
 .env
 .env.*
 !.env.example
-android/.idea/
-android/captures/
+**/android/.idea/
+**/android/captures/
 *.jks
 *.keystore
 .pages-preview/

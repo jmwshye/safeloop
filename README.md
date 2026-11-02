@@ -1,87 +1,58 @@
-# 안전고리 SafeLoop
+# 안전고리 관리자 웹
 
-안전고리 관리자 대시보드와 공유 Firebase 백엔드 저장소입니다. 작업자 앱은 별도 [Android 저장소](https://github.com/jmwshye/safeloop-app-)에서 개발합니다.
+- 공용 데이터: NestJS API · PostgreSQL
+- 계정·현장·기록: Android 앱과 공유
+- 기본 화면: 실제 서버 연결
+- 모의 화면: 주소 끝에 `?demo=1` 추가. 브라우저 안에서만 저장
 
+## 실행
 
-## 설치 없이 웹 화면 보기
-
-### [안전고리 웹 시연 열기](https://jmwshye.github.io/safeloop/)
-
-위 링크를 누르면 브라우저에서 바로 사용할 수 있습니다. 팀원은 Node.js 설치나 로컬 실행이 필요하지 않습니다. 화면 확인은 웹 링크로, 공동 개발은 이 저장소로 진행합니다.
-
-최초 1회 저장소 소유자가 **Settings → Pages → Build and deployment → Source → GitHub Actions**를 선택해야 합니다. GitHub Actions의 **Deploy SafeLoop web** 실행이 성공하면 위 링크가 활성화됩니다. 이미 실패한 실행이 있으면 해당 실행에서 **Re-run all jobs**를 누르세요. 초기 설정을 하지 않았거나 첫 배포가 끝나기 전에는 링크가 404로 표시될 수 있습니다.
-
-이후 `main`에 코드가 반영되면 `.github/workflows/deploy-pages.yml`이 자동으로 웹을 빌드·배포합니다. 브라우저에 저장한 모의 데이터는 사용자별로 분리되며, 웹 공개만으로 Firebase 서버나 Android APK가 배포되지는 않습니다.
-
-## 로컬에서 실행
-
-파일 탐색기에서 `start.bat` 또는 `start.cmd`를 더블클릭하면 준비된 웹 화면이 브라우저에 열립니다. 실행 창은 켜 두세요. Node.js가 필요하며 매번 설치·빌드하지 않습니다. 시작 메시지는 `start.log`에 남습니다. 코드를 수정한 경우에만 아래 명령으로 다시 빌드하세요.
+Node.js 22 이상.
 
 ```powershell
-npm install
-npm run build
-npm run preview -- --port 5174
-```
-
-- 기본 실행은 **로컬 시연**입니다. 김민수 작업자와 4명의 동료, 초기 위험·근로 기록은 모의 자료입니다.
-- 작업자 웹 화면과 역할 전환 기능을 제거했습니다. 출퇴근·점검·동료 확인은 별도 Android 앱에서 수행합니다.
-- 시연 기록은 브라우저에 저장됩니다. 다른 브라우저나 기기로 자동 동기화되지 않습니다.
-- **실제 Firebase 모드**는 `.env.example`을 `.env.local`로 복사하고 Firebase 설정을 입력한 뒤 다시 빌드하면 활성화됩니다.
-
-## 구성
-
-| 경로 | 내용 |
-| --- | --- |
-| `web/src/` | React 관리자 웹, Firebase 연결 모드 |
-| `functions/src/` | Firebase 인증 검증, 현장 참여, 서버 이벤트, 해시, 위험 처리, FCM·Cloud Tasks, PDF |
-| `firestore.rules`, `storage.rules` | 클라이언트 원본 수정 금지, 역할·당사자 접근 제한 |
-| 별도 `safeloop-app-` 저장소 | Kotlin·Jetpack Compose 작업자 앱, 가속도 감시 서비스, FCM, 카메라 촬영 |
-| `tests/` | 근로·안전 규칙과 해시 체인 테스트 |
-| `docs/SETUP.md` | Firebase·Android 설정과 실행 절차 |
-| `docs/REQUIREMENTS.md` | 헌장 요구사항 대응표와 남은 검증 |
-| `docs/VALIDATION.md` | 검증 결과와 한계 |
-
-## 구현한 주요 흐름
-
-출퇴근과 예상 일당은 안전점검 완료 여부와 독립적입니다. 작업 전 3항목에 모름을 선택하면 책임자 확인 요청을 기록합니다. 본인 신고와 동료 확인을 분리하고, 불일치는 개선 필요로 남깁니다. 사진 없는 동료 확인은 2등급, 사진 인증은 3등급으로 구분합니다. 위험은 조치 전 사진 → 조치 후 사진 → 신고자·조치자 외 다른 동료 재확인으로 처리합니다.
-
-원본 사건은 서버에서 생성하며 SHA-256 체인으로 연결합니다. 정정은 새로운 사건으로 추가합니다. 관리자 화면에 익명 신고자의 UID와 원본 사진 경로를 제공하지 않습니다. 사람의 진술과 센서의 추정을 구분하고, 119 전화 기능 실행을 실제 통화 연결이나 접수로 표시하지 않습니다.
-
-## 현재 상태
-
-### Android 안전 확인 흐름 확장
-
-휴대폰 움직임 감지 → 본인 확인 → 15초 무응답 시 같은 구역 동료 호출 → 수락·현장 도착 → 주변 사진 제출 후 안전 확인 완료 흐름을 추가했습니다. 관리자 Firebase 연결 화면에서 진행 상태와 확인 사진을 조회합니다. 워치 앱은 개발 범위에 포함하지 않습니다.
-
-Android 소스와 APK 빌드 워크플로는 [작업자 앱 저장소](https://github.com/jmwshye/safeloop-app-)로 분리했습니다. **[iPhone 사용자용 PC 시연·기기 간 검증 안내](docs/ANDROID_DEMO.md)**를 참고하세요. 시연 모드와 실제 서버 연결 모드의 검증 범위를 구분합니다.
-
-관리자 웹 빌드와 회귀 테스트를 완료했습니다. 별도 작업자 앱은 Android 빌드·단위 테스트·에뮬레이터 실행과 사진 확인 흐름까지 검증했습니다. **Firebase 실제 통합·기기 간 알림·실기기 센서 정확도·잠금 화면 센서는 아직 검증하지 못했습니다.** 상세 상태는 `docs/VALIDATION.md`와 앱 저장소의 검증 기록을 확인하세요.
-
-사진 캡처는 HTTPS 또는 localhost와 카메라 권한이 필요합니다. 시연 모드에서 사진과 기록은 같은 브라우저에 남습니다. 현장 개인정보 대신 팀원·모의 데이터로 시험하세요.
-
-## 테스트
-
-```powershell
-npm test
-npm --prefix functions install
-npm --prefix functions run check
-```
-
-한국어 PDF에는 Google Fonts Noto Sans KR(OFL 라이선스)을 포함했습니다. Firebase 서버의 PDF 3종과 원본 JSON을 함께 내보낼 수 있습니다. 웹 시연 보고서는 인쇄 창에서 PDF로 저장합니다.
-
-
-## GitHub에서 처음 받은 팀원
-
-GitHub 저장소에는 설치 캐시와 빌드 결과 `dist`가 포함되지 않습니다. 아래 순서로 최초 1회 설치·빌드한 뒤 실행하세요. ZIP 산출물에는 `dist`가 포함되어 바로 실행할 수 있습니다.
-
-```powershell
-git clone https://github.com/jmwshye/safeloop.git
-cd safeloop
 npm ci
-npm run build
-.\start.bat
+Copy-Item .env.example .env.local
+npm run dev -- --port 5173 --strictPort
 ```
 
-Git을 설치하지 않은 경우 저장소의 `Code` → `Download ZIP`으로 받고 압축을 푼 뒤, 그 폴더에서 `npm ci`, `npm run build`를 실행하면 됩니다. Node.js 22 이상이 필요합니다. 코드를 바꾸면 다시 빌드해야 화면에 반영됩니다.
+- `.env.local`: `VITE_API_BASE_URL`에 실행 중인 NestJS 주소
+- 웹 주소: `http://127.0.0.1:5173`
+- NestJS `ADMIN_WEB_ORIGIN`: 웹 주소와 정확히 일치
+- 외부 API: HTTPS 주소 사용
+- 서버 주소 변경 후 개발 서버 재시작
 
-기본 모드는 모의 데이터 시연이며 각 브라우저의 기록은 별도로 저장됩니다. Android APK와 Firebase 실서버가 배포된 상태는 아닙니다. 실제 계정·푸시·기기 간 공유는 `docs/SETUP.md`에 따라 별도로 연결해야 합니다. `.env.local`, `google-services.json`, 서비스 계정 키, Android 서명 키를 GitHub에 올리지 마세요.
+## 검사 · 빌드
+
+```powershell
+npm run build
+npm test
+npm run preview -- --port 5173 --strictPort
+```
+
+- `start.bat` / `start.cmd`: 기존 `dist` 실행. 소스·환경변수 변경 후 재빌드
+- 실행 기록: `start.log`
+
+## 로그인 · 연동
+
+- 앱과 같은 이메일·비밀번호로 로그인
+- 새 현장 생성자는 반장. 작업자는 발급된 현장 코드로 앱에서 참여
+- 반장 권한이 있는 현장만 관리
+- 로그인 토큰: 현재 브라우저 탭의 세션 저장소. 서버 만료 시각(로그인 후 7일) 또는 로그아웃 시 삭제
+- 조회 실패: 오류 표시. 모의 데이터로 대체하지 않음
+- 저장 중 연결 실패: 새로고침으로 반영 여부부터 확인
+- 사진: JPG·PNG·WebP, 최대 5 MiB. 인증된 API로 조회·업로드
+- PDF·CSV: NestJS에서 생성. 원본 사건·정정·누락 정보 포함
+- 119 버튼: 전화 화면 열기 요청. 통화 연결·신고 접수 확인과 구분
+
+## GitHub Pages
+
+- 저장소 변수 `SAFELOOP_API_BASE_URL`: 공개 HTTPS API 주소
+- NestJS `ADMIN_WEB_ORIGIN`: Pages 웹의 origin
+- Pages 설정: GitHub Actions
+- 워크플로: `.github/workflows/deploy-pages.yml`
+
+## 기존 자료
+
+- `legacy/firebase/`: 이전 서버·규칙·검증 원본 보관. 현재 실행·빌드·배포에 사용하지 않음
+- `legacy/firebase/docs/`: 이전 기획·검증 자료. 현재 앱은 `safeloop-app-` 저장소 기준
+- `.env.local`, 계정 토큰·비밀번호·개인 키는 Git에 올리지 않기
