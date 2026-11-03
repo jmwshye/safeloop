@@ -7,7 +7,7 @@ export default function WireframeDemo() {
     <>
       <div className="demo-mode-banner">
         모의 화면 · 예시 데이터이며 서버에 저장되지 않아요.{" "}
-        <a href={location.pathname}>서버 화면으로 이동</a>
+        {import.meta.env.VITE_DEMO_ONLY !== 'true' && <a href={location.pathname}>서버 화면으로 이동</a>}
       </div>
       <SiteWorkspace
         api={api}

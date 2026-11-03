@@ -4,7 +4,7 @@ import "./style.css";
 import "./wireframe.css";
 const LiveApp = React.lazy(() => import("./LiveApp.jsx"));
 const DemoApp = React.lazy(() => import("./WireframeDemo.jsx"));
-const demo = new URLSearchParams(location.search).get("demo") === "1";
+const demo = import.meta.env.VITE_DEMO_ONLY === 'true' || new URLSearchParams(location.search).get("demo") === "1";
 createRoot(document.getElementById("root")).render(
   <React.Suspense
     fallback={

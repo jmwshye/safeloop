@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      demo_only:
+        description: 'Publish a login-free demo preview without a NestJS server'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -33,7 +38,7 @@ jobs:
         run: npm ci
       - name: Build connected admin web
         run: |
-          if [ -z "$VITE_API_BASE_URL" ]; then
+          if [ "$DEMO_ONLY" != 'true' ] && [ -z "$VITE_API_BASE_URL" ]; then
             echo 'SAFELOOP_API_BASE_URL repository variable is required.'
             exit 1
           fi
@@ -41,6 +46,8 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
           VITE_API_BASE_URL: ${{ vars.SAFELOOP_API_BASE_URL }}
+          VITE_DEMO_ONLY: ${{ inputs.demo_only && 'true' || 'false' }}
+          DEMO_ONLY: ${{ inputs.demo_only && 'true' || 'false' }}
       - name: Check application rules and launcher
         run: npm test
       - name: Configure GitHub Pages
