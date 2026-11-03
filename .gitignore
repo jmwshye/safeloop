@@ -4,29 +4,30 @@ dist/
 .env.local
 functions/lib/
 functions/node_modules/
-android/.gradle/
-android/.kotlin/
-android/local.properties
-android/**/build/
+**/android/.gradle/
+**/android/.kotlin/
+**/android/local.properties
+**/android/**/build/
 .openai/*.zip
 .firebase/
 *-debug.log
 # Local browser QA uses the installed runtime; generated developer-only artifacts.
 qa*.mjs
 !scripts/qa-admin.mjs
+!scripts/qa-live-admin.mjs
 debug-ui.mjs
 docs/debug.png
 docs/audit-web.json
 start.log
 # Firebase and developer-local configuration
-android/app/google-services.json
+**/google-services.json
 service-account*.json
 **/service-account*.json
 .env
 .env.*
 !.env.example
-android/.idea/
-android/captures/
+**/android/.idea/
+**/android/captures/
 *.jks
 *.keystore
 .pages-preview/
