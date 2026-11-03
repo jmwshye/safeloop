@@ -1,0 +1,1245 @@
+:root {
+  --blue: #1d5ed8;
+  --green: #09865d;
+  --line: #e0e7f0;
+  --muted: #5c6d80;
+  --ink: #202b39;
+  color: var(--ink);
+  background: #f5f7fa;
+}
+.wireframe-app h1,
+.wireframe-app h2,
+.wireframe-app h3 {
+  color: var(--ink);
+}
+.wireframe-app .stat-value small {
+  color: inherit;
+}
+.wireframe-app .sidebar {
+  width: max(240px, 16.667%);
+}
+.wireframe-app .main-shell {
+  margin-left: max(240px, 16.667%);
+}
+.wireframe-app {
+  background: #f5f7fa;
+  min-height: 100vh;
+  color: var(--ink);
+}
+.wireframe-app .sidebar {
+  width: 16.667%;
+  padding: 28px 18px 32px;
+  border-color: var(--line);
+}
+.wireframe-app .main-shell {
+  margin-left: 16.667%;
+}
+.wireframe-app .brand {
+  margin: 0 8px 24px;
+  font-size: 24px;
+  letter-spacing: -1px;
+  gap: 10px;
+}
+.wireframe-app .brand-symbol {
+  background: var(--blue);
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  transform: none;
+  position: relative;
+}
+.wireframe-app .brand-symbol svg {
+  display: none;
+}
+.wireframe-app .brand-symbol:before,
+.wireframe-app .brand-symbol:after {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border: 4px solid #ffd332;
+  border-radius: 50%;
+  left: 5px;
+  top: 8px;
+}
+.wireframe-app .brand-symbol:after {
+  border-color: white;
+  left: 13px;
+}
+.wireframe-app .workspace {
+  padding: 16px 18px;
+  background: #f5f7fa;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  margin: 0 4px 23px;
+  display: block;
+}
+.wireframe-app .workspace-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #536476;
+}
+.wireframe-app .workspace-select {
+  display: block;
+}
+.wireframe-app .workspace-select select {
+  font-size: 18px;
+  padding: 4px 0;
+  width: 100%;
+  color: var(--ink);
+  margin-top: 3px;
+  min-height: 30px;
+  appearance: none;
+}
+.wireframe-app .workspace small {
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.wireframe-app .nav-label,
+.wireframe-app nav svg,
+.wireframe-app .trust {
+  display: none;
+}
+.wireframe-app nav {
+  gap: 8px;
+}
+.wireframe-app nav button {
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #536476;
+  border-radius: 16px;
+  min-height: 58px;
+  justify-content: flex-start;
+}
+.wireframe-app nav button.active {
+  background: #e8f0ff;
+  color: var(--blue);
+}
+.wireframe-app .sidebar-bottom {
+  margin-top: auto;
+  border: 0;
+  padding-top: 30px;
+}
+.wireframe-app .user {
+  border: 0;
+  padding: 12px 18px 0;
+}
+.wireframe-app .user .avatar {
+  display: none;
+}
+.wireframe-app .user b,
+.wireframe-app .user small {
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.wireframe-app .nav-settings {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 12px 18px;
+  min-height: 44px;
+}
+.wireframe-app .topbar {
+  height: 0;
+  min-height: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.wireframe-app .breadcrumb {
+  display: none;
+}
+.wireframe-app .top-actions {
+  position: fixed;
+  bottom: 14px;
+  left: 18px;
+  width: 14%;
+  z-index: 11;
+  gap: 8px;
+}
+.wireframe-app .top-actions .demo-label {
+  display: none;
+}
+.wireframe-app .top-actions .button {
+  font-size: 11px;
+  min-height: 28px;
+  padding: 4px 8px;
+}
+.wireframe-app .top-actions .icon-button {
+  min-width: 30px;
+  min-height: 30px;
+}
+.wireframe-app main {
+  padding: 38px 40px 32px;
+  max-width: none;
+  min-height: 100vh;
+}
+.wireframe-app .page-heading {
+  margin: 0 0 24px;
+  align-items: center;
+  gap: 18px;
+}
+.wireframe-app h1 {
+  font-size: 34px;
+  letter-spacing: -1.5px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+.wireframe-app .heading-dot {
+  display: none;
+}
+.wireframe-app .subtitle {
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.wireframe-app h2 {
+  font-size: 21px;
+  line-height: 1.5;
+  letter-spacing: -0.6px;
+}
+.wireframe-app .button {
+  border-radius: 14px;
+  min-height: 50px;
+  padding: 13px 21px;
+  font-size: 17px;
+  line-height: 1.5;
+  gap: 8px;
+  font-weight: 700;
+}
+.wireframe-app .button.primary {
+  color: white;
+  background: var(--blue);
+  border: 1px solid var(--blue);
+  box-shadow: 0 3px 0 #174aa6;
+}
+.wireframe-app .button.secondary {
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+  box-shadow: none;
+}
+.wireframe-app .button:disabled {
+  box-shadow: none;
+}
+.wireframe-app .panel {
+  border: 2px solid var(--line);
+  border-radius: 19px;
+  box-shadow: none;
+  overflow: hidden;
+  background: #fff;
+}
+.wireframe-app .panel-heading {
+  padding: 24px;
+  gap: 15px;
+}
+.wireframe-app .panel-heading p,
+.wireframe-app .panel-heading small {
+  font-size: 15px;
+  color: var(--muted);
+}
+.wireframe-app .stats-grid,
+.wireframe-app .stats-grid.three {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.wireframe-app .stat {
+  padding: 22px;
+  min-height: 120px;
+  border: 2px solid var(--line);
+  border-radius: 19px;
+  box-shadow: none;
+  background: white;
+}
+.wireframe-app .stat-title {
+  font-size: 17px;
+  color: #536476;
+  font-weight: 700;
+}
+.wireframe-app .stat-title > span,
+.wireframe-app .stat > p {
+  display: none;
+}
+.wireframe-app .stat-value {
+  font-size: 40px;
+  letter-spacing: -1px;
+  line-height: 1.25;
+  margin: 9px 0 0;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.wireframe-app .stat-value small {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+.wireframe-app .stat.amber .stat-value {
+  color: #945b00;
+}
+.wireframe-app .tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 35px;
+  padding: 7px 13px;
+  border-radius: 30px;
+  font-size: 15px;
+  line-height: 1.4;
+  letter-spacing: 0;
+  background: #e9eef5;
+  color: #536476;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.wireframe-app .tag i {
+  display: none;
+}
+.wireframe-app .tag.green {
+  background: #e3f5ec;
+  color: #07845b;
+}
+.wireframe-app .tag.amber {
+  background: #fff4dc;
+  color: #995b00;
+}
+.wireframe-app .tag.blue {
+  background: #e8f0ff;
+  color: var(--blue);
+}
+.wireframe-app .active-calls {
+  background: #fff0ee;
+  border-color: #ffb9b6;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  gap: 20px;
+}
+.wireframe-app .active-calls .panel-heading {
+  padding: 0;
+  white-space: nowrap;
+  display: block;
+}
+.wireframe-app .active-calls small {
+  display: none;
+}
+.wireframe-app .call-card {
+  border: 0;
+  background: none;
+  padding: 0;
+  flex: 1;
+}
+.wireframe-app .call-card > svg {
+  display: none;
+}
+.wireframe-app .call-card p {
+  font-size: 16px;
+  color: var(--muted);
+}
+.wireframe-app .call-card b {
+  font-size: 18px;
+}
+.wireframe-app .call-detail-button {
+  background: #ca1d17;
+  color: white;
+  border-radius: 14px;
+  box-shadow: 0 3px #9f1c16;
+  padding: 15px 22px;
+  margin-left: auto;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.wireframe-app .overview-columns,
+.wireframe-app .risk-split,
+.wireframe-app .incident-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 22px;
+}
+.wireframe-app .overview-columns > .panel {
+  min-height: 530px;
+}
+.wireframe-app .record-row {
+  padding: 23px;
+  border-color: var(--line);
+  font-size: 18px;
+  gap: 7px;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+.wireframe-app .record-row span {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.wireframe-app .risk-summary {
+  padding-right: 110px;
+}
+.wireframe-app .risk-summary > .tag {
+  position: absolute;
+  right: 23px;
+  top: 30px;
+}
+.wireframe-app .overview-columns .panel:nth-child(2) .record-row {
+  padding: 17px 24px 17px 55px;
+  border: 0;
+}
+.wireframe-app .overview-columns .panel:nth-child(2) .record-row:before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: 25px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+.wireframe-app .table-wrap {
+  overflow-x: auto;
+}
+.wireframe-app table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.wireframe-app th,
+.wireframe-app td {
+  padding: 19px 23px;
+  border-bottom: 1px solid var(--line);
+  font-size: 17px;
+  line-height: 1.6;
+  text-align: left;
+}
+.wireframe-app th {
+  background: #edf2f8;
+  color: #536476;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.wireframe-app tbody tr:last-child td {
+  border-bottom: 0;
+}
+.wireframe-app td .tag {
+  display: flex;
+  width: 100%;
+}
+.wireframe-app td small {
+  font-size: 12px;
+}
+.wireframe-app .worker-name {
+  padding: 0;
+  text-align: left;
+  min-height: 36px;
+}
+.wireframe-app .worker-name:hover {
+  color: var(--blue);
+  text-decoration: underline;
+}
+.wireframe-app .status-button {
+  padding: 0;
+  width: 100%;
+}
+.wireframe-app .helper {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.8;
+  padding: 12px 22px;
+}
+.wireframe-app .notice {
+  background: #edf2f8;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  color: var(--muted);
+  font-size: 16px;
+  padding: 18px 22px;
+  margin: 22px 0;
+}
+.wireframe-app .notice.amber {
+  background: #fff4dc;
+  border-color: #f6d595;
+  color: #80500b;
+}
+.wireframe-app .toolbar {
+  gap: 16px;
+  align-items: center;
+}
+.wireframe-app .tabs {
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.wireframe-app .tabs button,
+.wireframe-app .month-tabs button {
+  border: 2px solid var(--line);
+  background: #fff;
+  border-radius: 30px;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 10px 18px;
+  min-height: 48px;
+  color: var(--ink);
+}
+.wireframe-app .tabs .active,
+.wireframe-app .month-tabs .active {
+  color: var(--blue);
+  border-color: #2868ff;
+  background: #e9f1ff;
+}
+.wireframe-app .risk-table {
+  align-self: start;
+}
+.wireframe-app .selected-row {
+  background: #e8f0ff;
+}
+.wireframe-app .risk-table td {
+  padding: 16px 20px;
+}
+.wireframe-app .risk-table td:first-child button {
+  text-align: left;
+  padding: 0;
+  min-height: 38px;
+  font-size: 17px;
+}
+.wireframe-app .risk-detail {
+  padding: 24px;
+  min-height: 750px;
+}
+.wireframe-app .risk-detail > h2 {
+  margin: 16px 0;
+}
+.wireframe-app .risk-detail > p {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 13px 0;
+}
+.wireframe-app .risk-detail label {
+  font-size: 15px;
+  margin-top: 15px;
+}
+.wireframe-app .risk-detail > .button {
+  margin: 12px 9px 0 0;
+}
+.wireframe-app .risk-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wireframe-app .photo-placeholder {
+  height: 230px;
+  background: #dfe5ed;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #536476;
+  font-weight: 700;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+}
+.wireframe-app .photo-placeholder.after {
+  height: 140px;
+  border: 2px dashed #8595a7;
+  background: #f6f8fb;
+}
+.wireframe-app .server-photo img {
+  width: 100%;
+  max-height: 280px;
+}
+.wireframe-app .server-photo figcaption {
+  font-size: 15px;
+}
+.wireframe-app .report-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.wireframe-app .report-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+.wireframe-app .report-card h2 {
+  font-size: 21px;
+  margin: 0 0 16px;
+}
+.wireframe-app .report-card p {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 0 0 16px;
+  min-height: 0;
+}
+.wireframe-app .report-icon {
+  display: none;
+}
+.wireframe-app .report-card .button {
+  width: 100%;
+  margin-top: 14px;
+}
+.wireframe-app .report-card .inline .button {
+  width: auto;
+  flex: 1;
+}
+.wireframe-app .report-card .report-controls {
+  margin-top: auto;
+}
+.wireframe-app .month-tabs {
+  display: flex;
+  gap: 9px;
+  margin: 10px 0;
+}
+.wireframe-app input,
+.wireframe-app select,
+.wireframe-app textarea {
+  color: var(--ink);
+  border-color: var(--line);
+  font-size: 16px;
+}
+.wireframe-app label {
+  font-size: 15px;
+  color: var(--muted);
+}
+.wireframe-app details {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.wireframe-app summary {
+  cursor: pointer;
+  padding: 8px 0;
+  min-height: 38px;
+}
+.wireframe-app .empty {
+  font-size: 17px;
+  color: var(--muted);
+}
+.wireframe-app .back-link {
+  padding: 0 0 16px;
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 17px;
+  min-height: 40px;
+}
+.wireframe-app .incident-page > h1 {
+  margin-bottom: 22px;
+}
+.wireframe-app .incident-page > div > h2 {
+  font-size: 30px;
+}
+.wireframe-app .incident-page > .inline {
+  justify-content: flex-end;
+}
+.wireframe-app .incident-page p {
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 13px 0;
+}
+.wireframe-app .incident-columns {
+  margin-top: 25px;
+}
+.wireframe-app .incident-delivery,
+.wireframe-app .incident-confirmation {
+  padding: 24px;
+  min-height: 700px;
+}
+.wireframe-app .incident-delivery > .table-wrap {
+  border: 2px solid var(--line);
+  border-radius: 17px;
+  margin-top: 16px;
+}
+.wireframe-app .incident-delivery td,
+.wireframe-app .incident-delivery th {
+  padding: 16px 10px;
+  font-size: 15px;
+}
+.wireframe-app .incident-events {
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  margin-top: 16px;
+  padding: 18px;
+}
+.wireframe-app .incident-events > div {
+  display: flex;
+  gap: 20px;
+  padding: 18px 0;
+  font-size: 16px;
+}
+.wireframe-app .incident-events b {
+  color: var(--muted);
+}
+.wireframe-app .incident-confirmation > h2 {
+  margin-bottom: 16px;
+}
+.wireframe-app .incident-confirmation .inline {
+  flex-wrap: wrap;
+}
+.wireframe-app .incident-confirmation .inline > .button {
+  flex: 1;
+}
+.wireframe-app .main-footer {
+  display: none;
+}
+.wireframe-app .emergency-fab {
+  background: #ca1d17;
+  color: #fff;
+  border: 0;
+  font-size: 13px;
+  bottom: 18px;
+  right: 18px;
+  padding: 10px 15px;
+}
+.wireframe-app .toast {
+  background: #233650;
+}
+.wireframe-app .modal {
+  max-width: 880px;
+  padding: 28px;
+}
+.wireframe-app .invite-code {
+  color: var(--blue);
+  background: #e8f0ff;
+  border-color: #7ea6ed;
+}
+.wireframe-app .settings {
+  max-width: 900px;
+}
+.wireframe-app .settings h2 {
+  margin-bottom: 20px;
+}
+.wireframe-app .settings > .button {
+  margin-top: 20px;
+}
+.wireframe-app .record-stats .stat-value {
+  font-size: 34px;
+}
+.wireframe-app
+  .main-shell
+  main[data-page="people"]
+  > .panel
+  > .panel-heading
+  h2 {
+  font-size: 17px;
+}
+.wireframe-app .timeline-source {
+  border: 2px solid #09865d;
+  background: white !important;
+  color: #09865d !important;
+}
+.wireframe-app .timeline-source.system {
+  border-style: dashed;
+  border-color: #a36500;
+  color: #995b00 !important;
+}
+.demo-mode-banner {
+  left: 16.667%;
+  bottom: 0;
+  padding: 5px;
+  font-size: 12px;
+  background: #fff4dc;
+  pointer-events: none;
+}
+.demo-mode-banner a {
+  pointer-events: auto;
+}
+.wireframe-app .other-month {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.wireframe-app .other-month input {
+  max-width: 165px;
+  margin: 0;
+  font-size: 14px;
+  padding: 8px;
+}
+.wireframe-app .record-stats .stat-value {
+  letter-spacing: -1.5px;
+}
+@media (min-width: 1800px) {
+  .wireframe-app main {
+    padding: 40px 48px;
+  }
+  .wireframe-app .sidebar {
+    padding: 38px 18px;
+  }
+  .wireframe-app h1 {
+    font-size: 36px;
+  }
+  .wireframe-app .overview-columns > .panel {
+    min-height: calc(100vh - 480px);
+  }
+  .wireframe-app .risk-detail {
+    min-height: calc(100vh - 200px);
+  }
+  .wireframe-app .stat {
+    min-height: 136px;
+    padding: 24px 26px;
+  }
+  .wireframe-app .stat-value {
+    font-size: 46px;
+  }
+  .wireframe-app .record-stats .stat-value {
+    font-size: 42px;
+  }
+  .wireframe-app .incident-delivery,
+  .wireframe-app .incident-confirmation {
+    min-height: calc(100vh - 220px);
+  }
+}
+@media (max-width: 1250px) {
+  .wireframe-app .sidebar {
+    width: 230px;
+    padding: 25px 12px;
+  }
+  .wireframe-app .main-shell {
+    margin-left: 230px;
+  }
+  .wireframe-app main {
+    padding: 28px 24px;
+  }
+  .wireframe-app .brand {
+    font-size: 22px;
+  }
+  .wireframe-app .workspace-select select {
+    font-size: 15px;
+  }
+  .wireframe-app .workspace small {
+    font-size: 13px;
+  }
+  .wireframe-app nav button {
+    font-size: 16px;
+    padding: 15px;
+  }
+  .wireframe-app .stat {
+    padding: 18px;
+  }
+  .wireframe-app .stat-value {
+    font-size: 30px;
+  }
+  .wireframe-app .stat-title {
+    font-size: 14px;
+  }
+  .wireframe-app h1 {
+    font-size: 30px;
+  }
+  .wireframe-app .button {
+    font-size: 15px;
+    padding: 10px 16px;
+  }
+  .wireframe-app .subtitle {
+    font-size: 16px;
+  }
+  .wireframe-app .risk-split,
+  .wireframe-app .incident-columns {
+    grid-template-columns: 1fr;
+  }
+  .wireframe-app .report-grid {
+    grid-template-columns: 1fr;
+  }
+  .wireframe-app .record-stats .stat-value {
+    font-size: 26px;
+  }
+  .wireframe-app th,
+  .wireframe-app td {
+    padding: 15px;
+    font-size: 15px;
+  }
+  .wireframe-app .top-actions {
+    width: 200px;
+  }
+  .demo-mode-banner {
+    left: 230px;
+  }
+}
+@media (max-width: 900px) {
+  .wireframe-app .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .wireframe-app .main-shell {
+    margin-left: 0;
+  }
+  .wireframe-app .brand {
+    margin: 0 0 15px;
+  }
+  .wireframe-app .workspace {
+    margin: 0 0 12px;
+    padding: 12px;
+  }
+  .wireframe-app .workspace-select select {
+    font-size: 16px;
+  }
+  .wireframe-app .workspace,
+  .wireframe-app .user div {
+    display: block;
+  }
+  .wireframe-app nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+  .wireframe-app nav button,
+  .wireframe-app nav button:nth-child(2) {
+    display: flex;
+    font-size: 14px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 10px 5px;
+  }
+  .wireframe-app .sidebar-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 0;
+  }
+  .wireframe-app .user {
+    display: none;
+  }
+  .wireframe-app .nav-settings {
+    display: block;
+    padding: 8px;
+    min-height: 36px;
+  }
+  .wireframe-app .top-actions {
+    position: absolute;
+    top: 20px;
+    bottom: auto;
+    left: auto;
+    right: 20px;
+    width: auto;
+  }
+  .wireframe-app .overview-columns {
+    grid-template-columns: 1fr;
+  }
+  .wireframe-app .overview-columns > .panel {
+    min-height: 300px;
+  }
+  .wireframe-app .active-calls {
+    display: block;
+  }
+  .wireframe-app .active-calls .panel-heading {
+    margin-bottom: 12px;
+  }
+  .wireframe-app .call-card {
+    gap: 10px;
+  }
+  .wireframe-app .call-detail-button {
+    font-size: 14px;
+    padding: 12px;
+  }
+  .wireframe-app .page-heading {
+    align-items: flex-start;
+  }
+  .wireframe-app .page-heading > .button {
+    display: flex;
+  }
+  .wireframe-app .stats-grid,
+  .wireframe-app .stats-grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wireframe-app main {
+    padding: 24px 16px 65px;
+  }
+  .wireframe-app .tag {
+    font-size: 13px;
+  }
+  .wireframe-app .panel-heading {
+    padding: 18px;
+  }
+  .demo-mode-banner {
+    left: 0;
+  }
+  .wireframe-app .emergency-fab {
+    bottom: 30px;
+  }
+  .wireframe-app .toolbar {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 520px) {
+  .wireframe-app h1 {
+    font-size: 25px;
+  }
+  .wireframe-app .subtitle {
+    font-size: 14px;
+  }
+  .wireframe-app .page-heading {
+    flex-wrap: wrap;
+  }
+  .wireframe-app .page-heading > .button {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .wireframe-app .stat {
+    min-height: 105px;
+    padding: 15px;
+  }
+  .wireframe-app .stat-value {
+    font-size: 28px;
+  }
+  .wireframe-app .record-stats .stat-value {
+    font-size: 23px;
+  }
+  .wireframe-app th,
+  .wireframe-app td {
+    white-space: nowrap;
+    padding: 13px;
+    font-size: 14px;
+  }
+  .wireframe-app .call-card {
+    flex-wrap: wrap;
+  }
+  .wireframe-app .call-detail-button {
+    margin-left: 0;
+  }
+  .wireframe-app .risk-detail {
+    padding: 18px;
+  }
+  .wireframe-app .incident-delivery,
+  .wireframe-app .incident-confirmation {
+    padding: 16px;
+    min-height: 0;
+  }
+  .wireframe-app .incident-events > div {
+    flex-direction: column;
+    gap: 7px;
+  }
+  .wireframe-app .modal .two-col {
+    grid-template-columns: 1fr;
+  }
+  .wireframe-app .record-row {
+    font-size: 16px;
+  }
+  .wireframe-app .record-row span {
+    font-size: 14px;
+  }
+  .wireframe-app .risk-summary {
+    padding-right: 90px;
+  }
+  .wireframe-app .risk-summary > .tag {
+    right: 10px;
+  }
+  .wireframe-app .toolbar .tabs button {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  .wireframe-app .top-actions .compact-settings {
+    display: none;
+  }
+}
+.wireframe-app .risk-detail > .tag {
+  float: right;
+}
+.wireframe-app .risk-detail > h2 {
+  margin: 5px 0 18px;
+  padding-right: 65px;
+}
+.wireframe-app .risk-actions {
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.wireframe-app .risk-detail .risk-actions .button {
+  margin: 0;
+}
+.wireframe-app .risk-action-form {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.wireframe-app .risk-action-form > .button {
+  margin-top: 14px;
+}
+.wireframe-app .risk-detail .helper {
+  padding: 12px 0;
+  font-size: 15px;
+}
+.wireframe-app .risk-detail > details {
+  margin-top: 12px;
+  line-height: 1.7;
+}
+.wireframe-app .risk-detail details p {
+  font-size: 14px;
+  margin: 8px 0;
+}
+.wireframe-app .people-panel {
+  position: relative;
+  overflow: visible;
+  margin-top: 78px;
+}
+.wireframe-app .worker-tools {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 70px;
+  justify-content: space-between;
+  padding: 0 0 18px;
+}
+.wireframe-app .people-panel .table-wrap {
+  border-radius: 17px;
+}
+.wireframe-app .people-panel > .helper {
+  background: #e8f0ff;
+  border: 2px solid #c1d6ff;
+  border-radius: 18px;
+  margin: 24px -2px 0;
+  padding: 18px 22px;
+}
+.wireframe-app .people-panel {
+  border-bottom: 0;
+}
+.wireframe-app .records-toolbar {
+  justify-content: flex-end;
+}
+.wireframe-app .month-picker .other-month {
+  margin-bottom: 10px;
+}
+@media (min-width: 1800px) {
+  .wireframe-app td {
+    font-size: 20px;
+  }
+  .wireframe-app th {
+    font-size: 18px;
+  }
+  .wireframe-app .risk-table td,
+  .wireframe-app .risk-table td:first-child button {
+    font-size: 19px;
+  }
+  .wireframe-app .people-panel td {
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+}
+@media (max-width: 900px) {
+  .wireframe-app .sidebar {
+    width: 100%;
+  }
+  .wireframe-app .main-shell {
+    margin-left: 0;
+  }
+  .wireframe-app .people-panel {
+    margin-top: 85px;
+  }
+  .wireframe-app .worker-tools {
+    gap: 10px;
+  }
+  .wireframe-app .worker-tools input {
+    max-width: 160px;
+  }
+  .wireframe-app .risk-actions .button {
+    font-size: 14px;
+  }
+}
+.wireframe-app main {
+  position: relative;
+}
+.wireframe-app .month-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.wireframe-app .month-picker details.other-month {
+  display: block;
+  margin: 0;
+}
+.wireframe-app .other-month summary {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.wireframe-app .other-month input {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 2;
+  background: white;
+  box-shadow: 0 3px 12px #0001;
+}
+.wireframe-app main[data-page="records"] > .records-toolbar {
+  position: absolute;
+  right: 48px;
+  top: 44px;
+  margin: 0;
+}
+.wireframe-app main[data-page="records"] .page-heading {
+  padding-right: 540px;
+  min-height: 90px;
+}
+.wireframe-app main[data-page="records"] > .panel > .panel-heading {
+  display: none;
+}
+.wireframe-app .tag:has(.timeline-source-label) {
+  background: white;
+  border: 2px solid #09865d;
+  color: #09865d;
+}
+.wireframe-app .tag:has(.timeline-source-label.system) {
+  border-style: dashed;
+  border-color: #a36500;
+  color: #995b00;
+}
+.wireframe-app main[data-page="timeline"] td details {
+  margin: 0;
+}
+.wireframe-app main[data-page="timeline"] td summary {
+  font-size: 12px;
+  min-height: 24px;
+  padding: 3px 0;
+}
+.wireframe-app .incident-page h1 {
+  margin: 10px 0 18px;
+  font-size: 34px;
+}
+.wireframe-app .incident-page .incident-delivery .tag {
+  width: auto;
+}
+@media (max-width: 1500px) {
+  .wireframe-app main[data-page="records"] > .records-toolbar {
+    position: static;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+  }
+  .wireframe-app main[data-page="records"] .page-heading {
+    padding-right: 0;
+    min-height: 0;
+  }
+}
+@media (max-width: 600px) {
+  .wireframe-app .month-picker {
+    flex-wrap: wrap;
+  }
+  .wireframe-app .worker-tools .button {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  .wireframe-app .incident-page h1 {
+    font-size: 26px;
+  }
+  .wireframe-app .records-toolbar {
+    justify-content: flex-start !important;
+  }
+}
+@media (max-width: 900px) {
+  .wireframe-app .brand {
+    display: flex;
+  }
+  .wireframe-app .brand > span:last-child {
+    display: block;
+  }
+  .wireframe-app .sidebar-bottom .user {
+    display: none;
+  }
+}

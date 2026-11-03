@@ -638,7 +638,7 @@ function SiteFields({ site = {} }) {
   );
 }
 
-function SiteWorkspace({
+export function SiteWorkspace({
   api,
   user,
   site,
@@ -728,7 +728,7 @@ function SiteWorkspace({
       });
   }
   return (
-    <div className="app connected-app">
+    <div className="app connected-app wireframe-app">
       <aside className="sidebar">
         <a
           className="brand"
@@ -736,19 +736,17 @@ function SiteWorkspace({
           onClick={(event) => {
             event.preventDefault();
             setPage("dashboard");
+            setIncidentView(null);
           }}
         >
           <span className="brand-symbol">
             <Link size={27} />
           </span>
-          <span>
-            안전고리<small>SAFELOOP</small>
-          </span>
+          <span>안전고리</span>
         </a>
         <div className="workspace">
-          <HardHat />
           <label className="workspace-select">
-            <span className="sr-only">현재 현장</span>
+            <span className="workspace-label">현장</span>
             <select
               value={site.id}
               onChange={(event) => changeSite(event.target.value)}
@@ -767,8 +765,12 @@ function SiteWorkspace({
           {nav.map(([id, title, Icon]) => (
             <button
               key={id}
-              className={page === id ? "active" : ""}
-              onClick={() => setPage(id)}
+              className={!incidentView && page === id ? "active" : ""}
+              aria-current={!incidentView && page === id ? "page" : undefined}
+              onClick={() => {
+                setPage(id);
+                setIncidentView(null);
+              }}
             >
               <Icon size={19} />
               {title}
@@ -785,7 +787,13 @@ function SiteWorkspace({
               함께 확인해요.
             </p>
           </div>
-          <button className="nav-settings" onClick={() => setPage("settings")}>
+          <button
+            className="nav-settings"
+            onClick={() => {
+              setPage("settings");
+              setIncidentView(null);
+            }}
+          >
             <Settings size={19} />
             현장 정보
           </button>
@@ -793,7 +801,7 @@ function SiteWorkspace({
             <span className="avatar">{user.name.slice(0, 1)}</span>
             <div>
               <b>{user.name}</b>
-              <small>현장 반장</small>
+              <small>현장 책임자</small>
             </div>
           </div>
         </div>
@@ -808,7 +816,10 @@ function SiteWorkspace({
           <div className="top-actions">
             <button
               className="compact-settings button secondary"
-              onClick={() => setPage("settings")}
+              onClick={() => {
+                setPage("settings");
+                setIncidentView(null);
+              }}
             >
               현장 설정
             </button>
@@ -828,21 +839,40 @@ function SiteWorkspace({
             </button>
           </div>
         </header>
-        <main>
-          <div className="page-heading">
-            <div>
-              <p className="eyebrow">{day()} · SAFELOOP</p>
-              <h1>
-                {nav.find((item) => item[0] === page)?.[1] || "현장 정보"}
-                <span className="heading-dot" />
-              </h1>
-              <p className="subtitle">앱과 함께 쓰는 현장 기록</p>
+        <main data-page={incidentView ? "incident" : page}>
+          {!incidentView && (
+            <div className="page-heading">
+              <div>
+                <h1>
+                  {nav.find((item) => item[0] === page)?.[1] || "현장 정보"}
+                  <span className="heading-dot" />
+                </h1>
+                <p className="subtitle">
+                  {{
+                    dashboard: site.name + " · " + day(),
+                    people: workers.data
+                      ? workers.data.workers.length +
+                        "명 · 오늘 " +
+                        workers.data.workers.filter(
+                          (w) => w.checkedInAt && !w.checkedOutAt,
+                        ).length +
+                        "명 출근"
+                      : "작업자를 불러오는 중이에요",
+                    risks: "오래 방치된 위험이 위에 보여요",
+                    timeline: "삭제 없이 정정 기록만 추가돼요",
+                    records: "예상 일당 기준이며 실제 지급액과 다를 수 있어요",
+                    reports:
+                      "사실관계를 정리한 자료예요. 법률 판단을 대신하지 않아요",
+                  }[page] || site.name}
+                </p>
+              </div>
+              {(page === "dashboard" || page === "people") && (
+                <Action onClick={() => setInvite(true)}>
+                  작업자 초대 · {site.code}
+                </Action>
+              )}
             </div>
-            <Action onClick={() => setInvite(true)}>
-              <Plus size={17} />
-              작업자 초대
-            </Action>
-          </div>
+          )}
           {message && (
             <div className="notice" role="status">
               {message}
@@ -861,7 +891,19 @@ function SiteWorkspace({
               작업자 목록: {workers.error.message}
             </div>
           )}
-          {page === "dashboard" ? (
+          {incidentView ? (
+            <Incident
+              {...common}
+              key={incidentView.id}
+              id={incidentView.id}
+              historical={incidentView.historical}
+              onClose={() => {
+                setIncidentView(null);
+                setPage("dashboard");
+              }}
+              dial={dial}
+            />
+          ) : page === "dashboard" ? (
             <Overview {...common} />
           ) : page === "people" ? (
             <Workers {...common} />
@@ -954,16 +996,6 @@ function SiteWorkspace({
           </Action>
         </Modal>
       )}
-      {incidentView && (
-        <Incident
-          {...common}
-          key={incidentView.id}
-          id={incidentView.id}
-          historical={incidentView.historical}
-          onClose={() => setIncidentView(null)}
-          dial={dial}
-        />
-      )}
       {message && (
         <div className="toast live-toast" role="status">
           <span>{message}</span>
@@ -1022,7 +1054,7 @@ function eventLabel(type) {
 }
 function ActiveCalls({ calls, site, workers, openIncident }) {
   return (
-    <section className="panel" aria-label="진행 중인 호출">
+    <section className="panel active-calls" aria-label="진행 중인 호출">
       <div className="panel-heading">
         <h2>
           진행 중인 호출 <span className="count">{calls.length}</span>
@@ -1054,7 +1086,7 @@ function ActiveCalls({ calls, site, workers, openIncident }) {
               </p>
             )}
           </div>
-          <ChevronRight />
+          <span className="call-detail-button">호출 상세 보기</span>
         </button>
       ))}
     </section>
@@ -1079,20 +1111,6 @@ function Overview(props) {
               openIncident={openIncident}
             />
           )}
-          <section className="site-banner">
-            <div className="site-banner-icon">
-              <HardHat size={26} />
-            </div>
-            <div>
-              <h2>
-                {data.site.name}
-                <span>현장 현황</span>
-              </h2>
-              <p>
-                반장 {data.site.foremanName} · 기준일 {data.workDate}
-              </p>
-            </div>
-          </section>
           <div className="stats-grid">
             <Stat
               title="오늘 출근 인원"
@@ -1130,29 +1148,33 @@ function Overview(props) {
           {!data.activeCalls.length && (
             <p className="helper">진행 중인 호출이 없어요.</p>
           )}
-          <SafetyRequests {...props} />
-          <div className="two-col">
+          <div className="two-col overview-columns">
             <section className="panel">
               <div className="panel-heading">
-                <h2>오래된 미조치 위험</h2>
+                <h2>미조치 위험 · 오래된 순</h2>
                 <Action secondary onClick={() => navigate("risks")}>
                   전체 보기
                 </Action>
               </div>
               {data.oldestRisks.map((risk) => (
-                <div className="record-row" key={risk.id}>
+                <button
+                  className="record-row risk-summary"
+                  key={risk.id}
+                  onClick={() => navigate("risks")}
+                >
                   <b>{risk.title}</b>
                   <span>
                     {risk.zone} · {text(risk.category)} ·{" "}
-                    {elapsedSince(risk.createdAt)}
+                    {risk.anonymous ? "이름 숨김" : "작업자 신고"}
                   </span>
-                </div>
+                  <Tag tone="amber">{elapsedSince(risk.createdAt)}</Tag>
+                </button>
               ))}
               {!data.oldestRisks.length && <Empty>미조치 위험이 없어요.</Empty>}
             </section>
             <section className="panel">
               <div className="panel-heading">
-                <h2>오늘 최신 기록</h2>
+                <h2>오늘의 타임라인</h2>
                 <Action secondary onClick={() => navigate("timeline")}>
                   전체 보기
                 </Action>
@@ -1171,17 +1193,19 @@ function Overview(props) {
               {!data.timeline.length && <Empty />}
             </section>
           </div>
+          <SafetyRequests {...props} hideEmpty />
         </>
       )}
     </Remote>
   );
 }
-function SafetyRequests({ api, site, version, run, busy }) {
+function SafetyRequests({ api, site, version, run, busy, hideEmpty = true }) {
   const requests = useRemote(
     (signal) => api.request(sitePath(site.id, "/safety-requests"), { signal }),
     [api, site.id, version],
     15000,
   );
+  if (hideEmpty && requests.data?.requests.length === 0) return null;
   return (
     <section className="panel">
       <div className="panel-heading">
@@ -1285,12 +1309,22 @@ function Workers({ api, site, workers, run, busy, ...props }) {
   );
   return (
     <>
-      <section className="panel">
-        <div className="panel-heading">
-          <h2>
-            현장 작업자 {workers.length}명 · 오늘 출근{" "}
-            {workers.filter((worker) => worker.checkedInAt).length}명
-          </h2>
+      <section className="panel people-panel">
+        <div className="panel-heading worker-tools">
+          <Action
+            secondary
+            disabled={!workers.length}
+            onClick={() => {
+              const worker =
+                workers.find((w) => w.checkedInAt && !w.checkedOutAt) ||
+                workers[0];
+              setChosen(worker.userId);
+              setBuddy(worker.buddyUserId || "");
+              setCapture(null);
+            }}
+          >
+            동료 배정 바꾸기
+          </Action>
           <input
             aria-label="작업자 검색"
             placeholder="이름·구역·직종 검색"
@@ -1302,78 +1336,74 @@ function Workers({ api, site, workers, run, busy, ...props }) {
           <table>
             <thead>
               <tr>
-                <th>작업자</th>
-                <th>출퇴근</th>
-                <th>구역 · 직종</th>
-                <th>안전 동료</th>
-                <th>현재 확인 상태</th>
-                <th>위치·휴대</th>
-                <th />
+                <th>이름</th>
+                <th>작업 구역</th>
+                <th>오늘의 안전 동료</th>
+                <th>오늘 상태</th>
+                <th>서로 찍기</th>
               </tr>
             </thead>
             <tbody>
               {visible.map((worker) => (
                 <tr key={worker.userId}>
                   <td>
-                    <b>{worker.name}</b>
-                  </td>
-                  <td>
-                    {calls.has(worker.userId) ? (
-                      <Action
-                        secondary
-                        onClick={() =>
-                          props.openIncident(calls.get(worker.userId).id)
-                        }
-                      >
-                        호출 중 · 상세
-                      </Action>
-                    ) : worker.checkedOutAt ? (
-                      "퇴근"
-                    ) : worker.checkedInAt ? (
-                      "근무 중"
-                    ) : (
-                      "미출근"
-                    )}
-                    <small>{time(worker.checkedInAt)}</small>
-                  </td>
-                  <td>
-                    {worker.zone || "미등록"} · {worker.occupation || "미등록"}
-                  </td>
-                  <td>{name(worker.buddyUserId)}</td>
-                  <td>
-                    <Tag
-                      tone={
-                        worker.peerStatus === "photo_confirmed"
-                          ? "green"
-                          : "amber"
-                      }
-                    >
-                      {text(worker.peerStatus)}
-                    </Tag>
-                    <small>
-                      최근 안전 확인:{" "}
-                      {worker.checkInStatus
-                        ? text(worker.checkInStatus)
-                        : "요청 없음"}
-                    </small>
-                    {worker.highRiskTask && (
-                      <small>고위험 작업: {text(worker.highRiskTask)}</small>
-                    )}
-                  </td>
-                  <td>
-                    {text(worker.locationStatus)} · {text(worker.device?.state)}
-                  </td>
-                  <td>
-                    <Action
-                      secondary
+                    <button
+                      className="worker-name"
                       onClick={() => {
                         setChosen(worker.userId);
                         setBuddy(worker.buddyUserId || "");
                         setCapture(null);
                       }}
                     >
-                      관리
-                    </Action>
+                      <b>
+                        {worker.name} · {worker.occupation || "직종 미등록"}
+                      </b>
+                    </button>
+                  </td>
+                  <td>{worker.zone || "미등록"}</td>
+                  <td>{worker.checkedInAt ? name(worker.buddyUserId) : "—"}</td>
+                  <td>
+                    {calls.has(worker.userId) ? (
+                      <button
+                        className="status-button"
+                        onClick={() =>
+                          props.openIncident(calls.get(worker.userId).id)
+                        }
+                      >
+                        <Tag tone="amber">호출 중</Tag>
+                      </button>
+                    ) : (
+                      <Tag
+                        tone={
+                          worker.checkedOutAt || !worker.checkedInAt
+                            ? ""
+                            : "green"
+                        }
+                      >
+                        {worker.checkedOutAt
+                          ? "퇴근"
+                          : worker.checkedInAt
+                            ? "근무 중"
+                            : "출근 전"}
+                      </Tag>
+                    )}
+                  </td>
+                  <td>
+                    <Tag
+                      tone={
+                        worker.peerStatus === "photo_confirmed"
+                          ? "green"
+                          : worker.checkedInAt
+                            ? "amber"
+                            : ""
+                      }
+                    >
+                      {worker.peerStatus === "photo_confirmed"
+                        ? "완료"
+                        : worker.peerStatus === "statement_only"
+                          ? "사진 없이 확인"
+                          : text(worker.peerStatus)}
+                    </Tag>
                   </td>
                 </tr>
               ))}
@@ -1387,8 +1417,9 @@ function Workers({ api, site, workers, run, busy, ...props }) {
           </div>
         )}
         <p className="helper">
-          구역과 현재 확인 상태만 공유해요. 단독 작업자의 확인 담당은{" "}
-          {site.foremanName} 반장이에요.
+          작업자의 위치 이력은 보여주지 않아요. 이름을 누르면 동료 배정을 바꿀
+          수 있어요. 혼자 일하는 작업자의 확인 담당은 {site.foremanName}{" "}
+          반장이에요.
         </p>
       </section>
       <SafetyRequests api={api} site={site} run={run} busy={busy} {...props} />
@@ -1397,6 +1428,24 @@ function Workers({ api, site, workers, run, busy, ...props }) {
           title={person.name + " · 안전 동료"}
           onClose={() => setChosen(null)}
         >
+          <label>
+            작업자
+            <select
+              value={chosen}
+              onChange={(e) => {
+                const worker = workers.find((w) => w.userId === e.target.value);
+                setChosen(worker.userId);
+                setBuddy(worker.buddyUserId || "");
+                setCapture(null);
+              }}
+            >
+              {workers.map((w) => (
+                <option key={w.userId} value={w.userId}>
+                  {w.name} · {w.zone}
+                </option>
+              ))}
+            </select>
+          </label>
           <p>현재 동료: {name(person.buddyUserId)}</p>
           <label>
             새 동료
@@ -1528,6 +1577,18 @@ function Risks(props) {
     [api, site.id, version, status, offset],
     15000,
   );
+  const orderedRisks = [...(resource.data?.risks || [])].sort((a, b) =>
+    a.status === "open" && b.status === "open"
+      ? Date.parse(a.createdAt) - Date.parse(b.createdAt)
+      : a.status === "open"
+        ? -1
+        : b.status === "open"
+          ? 1
+          : 0,
+  );
+  const activeRiskId = orderedRisks.some((r) => r.id === selected)
+    ? selected
+    : orderedRisks[0]?.id;
   return (
     <>
       <div className="toolbar">
@@ -1536,7 +1597,7 @@ function Risks(props) {
             ["", "전체"],
             ["open", "미조치"],
             ["awaiting_recheck", "재확인 대기"],
-            ["resolved", "완료"],
+            ["resolved", "재확인 완료"],
           ].map(([id, title]) => (
             <button
               key={id}
@@ -1544,6 +1605,7 @@ function Risks(props) {
               onClick={() => {
                 setStatus(id);
                 setOffset(0);
+                setSelected(null);
               }}
             >
               {title}{" "}
@@ -1565,42 +1627,66 @@ function Risks(props) {
       <Remote resource={resource}>
         {(data) => (
           <>
-            <div className="risk-grid">
-              {data.risks.map((risk) => (
-                <section className="panel risk-large" key={risk.id}>
-                  <div className="panel-heading">
-                    <Tag tone={risk.status === "resolved" ? "green" : "amber"}>
-                      {text(risk.status)}
-                    </Tag>
-                    <small>
-                      {time(risk.createdAt)}
-                      {risk.status === "open" &&
-                        " · " + elapsedSince(risk.createdAt)}
-                    </small>
-                  </div>
-                  {risk.beforePhotoId ? (
-                    <Photo
-                      api={api}
-                      siteId={site.id}
-                      id={risk.beforePhotoId}
-                      label="신고 당시 사진"
-                    />
-                  ) : (
-                    <div className="risk-photo">
-                      <TriangleAlert size={32} />
-                      <span>첨부 사진 없음</span>
-                    </div>
-                  )}
-                  <h2>{risk.title}</h2>
-                  <p>
-                    {risk.zone} · {text(risk.category)}
-                  </p>
-                  <p>{risk.note}</p>
-                  <Action secondary onClick={() => setSelected(risk.id)}>
-                    조치 이력 보기
-                  </Action>
-                </section>
-              ))}
+            <div className="risk-split">
+              <section className="panel risk-table">
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>위험</th>
+                        <th>위치</th>
+                        <th>경과</th>
+                        <th>상태</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orderedRisks.map((risk) => (
+                        <tr
+                          key={risk.id}
+                          className={
+                            activeRiskId === risk.id ? "selected-row" : ""
+                          }
+                        >
+                          <td>
+                            <button onClick={() => setSelected(risk.id)}>
+                              <b>{risk.title}</b>
+                            </button>
+                          </td>
+                          <td>{risk.zone}</td>
+                          <td>
+                            {risk.status === "open"
+                              ? elapsedSince(risk.createdAt).replace("째", "")
+                              : "—"}
+                          </td>
+                          <td>
+                            <Tag
+                              tone={
+                                risk.status === "resolved"
+                                  ? "green"
+                                  : risk.status === "open"
+                                    ? "amber"
+                                    : "blue"
+                              }
+                            >
+                              {risk.status === "resolved"
+                                ? "재확인 완료"
+                                : text(risk.status)}
+                            </Tag>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              {activeRiskId && (
+                <RiskDetailLive
+                  {...props}
+                  key={activeRiskId}
+                  id={activeRiskId}
+                  inline
+                />
+              )}
             </div>
             {!data.risks.length && (
               <Empty>해당 상태의 위험 신고가 없어요.</Empty>
@@ -1609,14 +1695,20 @@ function Risks(props) {
               <Action
                 secondary
                 disabled={!offset}
-                onClick={() => setOffset(Math.max(0, offset - 40))}
+                onClick={() => {
+                  setOffset(Math.max(0, offset - 40));
+                  setSelected(null);
+                }}
               >
                 이전
               </Action>
               <Action
                 secondary
                 disabled={data.nextOffset == null}
-                onClick={() => setOffset(data.nextOffset)}
+                onClick={() => {
+                  setOffset(data.nextOffset);
+                  setSelected(null);
+                }}
               >
                 다음
               </Action>
@@ -1625,14 +1717,6 @@ function Risks(props) {
         )}
       </Remote>
       {creating && <RiskCreate {...props} onClose={() => setCreating(false)} />}
-      {selected && (
-        <RiskDetailLive
-          {...props}
-          key={selected}
-          id={selected}
-          onClose={() => setSelected(null)}
-        />
-      )}
     </>
   );
 }
@@ -1716,6 +1800,15 @@ function RiskCreate({ api, site, run, busy, onClose }) {
     </Modal>
   );
 }
+function RiskDetailShell({ inline, onClose, children }) {
+  return inline ? (
+    <section className="panel risk-detail">{children}</section>
+  ) : (
+    <Modal title="위험 신고 · 조치" onClose={onClose}>
+      {children}
+    </Modal>
+  );
+}
 function RiskDetailLive({
   api,
   site,
@@ -1725,6 +1818,7 @@ function RiskDetailLive({
   version,
   id,
   onClose,
+  inline = false,
 }) {
   const resource = useRemote(
     (signal) => api.request(sitePath(site.id, "/risks/" + id), { signal }),
@@ -1732,10 +1826,11 @@ function RiskDetailLive({
     10000,
   );
   const [file, setFile] = useState(null),
-    [assignee, setAssignee] = useState("");
+    [assignee, setAssignee] = useState(""),
+    [action, setAction] = useState(null);
   const upload = useMemo(createPhotoSubmission, []);
   return (
-    <Modal title="위험 신고 · 조치" onClose={onClose}>
+    <RiskDetailShell inline={inline} onClose={onClose}>
       <Remote resource={resource}>
         {({ risk }) => (
           <>
@@ -1744,10 +1839,21 @@ function RiskDetailLive({
             </Tag>
             <h2>{risk.title}</h2>
             <p>
-              {risk.zone} · {text(risk.category)}
+              {text(risk.category)} · {risk.zone} · {time(risk.createdAt)} 신고
+              ·{" "}
+              {risk.anonymous
+                ? "신고자 이름 숨김"
+                : "신고자 " + (risk.reporterName || "미기록")}
             </p>
-            <p>{risk.note}</p>
-            <div className="two-col">
+            <div className="risk-evidence">
+              {!risk.beforePhotoId && (
+                <div className="photo-placeholder">조치 전 사진 없음</div>
+              )}
+              {!risk.afterPhotoId && (
+                <div className="photo-placeholder after">
+                  조치 후 사진이 올라오면 여기에 보여요
+                </div>
+              )}
               {risk.beforePhotoId && (
                 <Photo
                   api={api}
@@ -1765,83 +1871,115 @@ function RiskDetailLive({
                 />
               )}
             </div>
-            <p>
-              담당자 {risk.assigneeName || "미배정"} · 조치자{" "}
-              {risk.fixerName || "미기록"} · 재확인자{" "}
-              {risk.verifierName || "미기록"}
-            </p>
-            <p>
-              신고 {time(risk.createdAt)} ·{" "}
-              {risk.anonymous
-                ? "신고자 이름 비공개"
-                : "신고자 " + (risk.reporterName || "미기록")}
-              {risk.status === "open" && " · " + elapsedSince(risk.createdAt)}
-              <br />
-              조치 {time(risk.fixedAt)}
-              <br />
-              재확인 {time(risk.verifiedAt)}
-            </p>
+            <details>
+              <summary>신고 내용과 조치 이력</summary>
+              <p>{risk.note}</p>
+              <p>
+                담당자 {risk.assigneeName || "미배정"} · 조치자{" "}
+                {risk.fixerName || "미기록"} · 재확인자{" "}
+                {risk.verifierName || "미기록"}
+              </p>
+              <p>
+                신고 {time(risk.createdAt)} ·{" "}
+                {risk.anonymous
+                  ? "신고자 이름 비공개"
+                  : "신고자 " + (risk.reporterName || "미기록")}
+                {risk.status === "open" && " · " + elapsedSince(risk.createdAt)}
+                <br />
+                조치 {time(risk.fixedAt)}
+                <br />
+                재확인 {time(risk.verifiedAt)}
+              </p>
+            </details>
             {risk.status === "open" && (
               <>
-                <label>
-                  조치 담당자
-                  <select
-                    value={assignee}
-                    onChange={(event) => setAssignee(event.target.value)}
+                <div className="inline risk-actions">
+                  <Action
+                    onClick={() =>
+                      setAction(action === "request" ? null : "request")
+                    }
                   >
-                    <option value="">선택</option>
-                    <option value={site.foremanId}>
-                      {site.foremanName} · 반장
-                    </option>
-                    {workers.map((worker) => (
-                      <option key={worker.userId} value={worker.userId}>
-                        {worker.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <Action
-                  disabled={busy || !assignee}
-                  onClick={() =>
-                    run((signal) =>
-                      api.request(
-                        sitePath(site.id, "/risks/" + id + "/request"),
-                        {
-                          method: "PUT",
-                          body: { assigneeId: assignee },
-                          signal,
-                        },
-                      ),
-                    )
-                  }
-                >
-                  담당자 배정
-                </Action>
-                <hr />
-                <PhotoInput onChange={setFile} label="조치 후 사진 · 필수" />
-                <Action
-                  disabled={busy || !file}
-                  onClick={() =>
-                    run(async (signal) => {
-                      const afterPhotoId = await upload(id, file, () =>
-                        api.upload(site.id, "risk_after", file, signal),
-                      );
-                      await api.request(
-                        sitePath(site.id, "/risks/" + id + "/fix"),
-                        {
-                          method: "PUT",
-                          body: { afterPhotoId },
-                          signal,
-                        },
-                      );
-                      setFile(null);
-                    })
-                  }
-                >
-                  조치 완료 신고
-                </Action>
+                    조치 요청 보내기
+                  </Action>
+                  <Action
+                    secondary
+                    onClick={() => setAction(action === "fix" ? null : "fix")}
+                  >
+                    직접 조치 완료
+                  </Action>
+                </div>
+                {action === "request" && (
+                  <div className="risk-action-form">
+                    <label>
+                      조치 담당자
+                      <select
+                        value={assignee}
+                        onChange={(event) => setAssignee(event.target.value)}
+                      >
+                        <option value="">선택</option>
+                        <option value={site.foremanId}>
+                          {site.foremanName} · 반장
+                        </option>
+                        {workers.map((worker) => (
+                          <option key={worker.userId} value={worker.userId}>
+                            {worker.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <Action
+                      disabled={busy || !assignee}
+                      onClick={() =>
+                        run((signal) =>
+                          api.request(
+                            sitePath(site.id, "/risks/" + id + "/request"),
+                            {
+                              method: "PUT",
+                              body: { assigneeId: assignee },
+                              signal,
+                            },
+                          ),
+                        )
+                      }
+                    >
+                      요청 보내기
+                    </Action>
+                  </div>
+                )}
+                {action === "fix" && (
+                  <div className="risk-action-form">
+                    <PhotoInput
+                      onChange={setFile}
+                      label="조치 후 사진 · 필수"
+                    />
+                    <Action
+                      disabled={busy || !file}
+                      onClick={() =>
+                        run(async (signal) => {
+                          const afterPhotoId = await upload(id, file, () =>
+                            api.upload(site.id, "risk_after", file, signal),
+                          );
+                          await api.request(
+                            sitePath(site.id, "/risks/" + id + "/fix"),
+                            {
+                              method: "PUT",
+                              body: { afterPhotoId },
+                              signal,
+                            },
+                          );
+                          setFile(null);
+                        })
+                      }
+                    >
+                      조치 완료 저장
+                    </Action>
+                  </div>
+                )}
               </>
             )}
+            <p className="helper">
+              조치 기록은 지울 수 없어요. 잘못된 내용은 정정 기록으로 추가해요.
+            </p>
             {risk.status === "awaiting_recheck" && (
               <>
                 <p className="helper">
@@ -1865,7 +2003,7 @@ function RiskDetailLive({
           </>
         )}
       </Remote>
-    </Modal>
+    </RiskDetailShell>
   );
 }
 
@@ -1980,9 +2118,20 @@ function SafetyTimeline({ api, site, user, workers, version, run, busy }) {
                             event.type === "safety_check.corrected") && (
                             <Tag>정정 추가</Tag>
                           )}
-                          {event.source === "human"
-                            ? "사람이 확인"
-                            : "시스템 기록·추정"}
+                          <Tag
+                            tone={event.source === "human" ? "green" : "amber"}
+                          >
+                            <span
+                              className={
+                                "timeline-source-label " +
+                                (event.source === "human" ? "human" : "system")
+                              }
+                            >
+                              {event.source === "human"
+                                ? "사람이 확인"
+                                : "시스템이 추정"}
+                            </span>
+                          </Tag>
                         </td>
                         <td>
                           {event.actorId
@@ -2175,18 +2324,11 @@ function Records({ api, site, version, run, busy }) {
     );
   return (
     <>
-      <div className="toolbar">
-        <label>
-          조회 월
-          <input
-            type="month"
-            value={month}
-            onChange={(event) => setMonth(event.target.value)}
-          />
-        </label>
+      <div className="toolbar records-toolbar">
+        <MonthPicker value={month} onChange={setMonth} />
         <div className="inline">
           <Action disabled={busy} onClick={() => file("csv")}>
-            CSV
+            월간 집계 내보내기
           </Action>
           <Action secondary disabled={busy} onClick={() => file("pdf")}>
             PDF
@@ -2196,9 +2338,9 @@ function Records({ api, site, version, run, busy }) {
       <Remote resource={resource}>
         {(data) => (
           <>
-            <div className="stats-grid three">
+            <div className="stats-grid record-stats">
               <Stat
-                title="작업자 수"
+                title="이번 달 근로자"
                 value={data.summary.totalWorkers}
                 unit="명"
                 icon={Users}
@@ -2206,7 +2348,7 @@ function Records({ api, site, version, run, busy }) {
                 footer="선택 월 근로 기록 기준"
               />
               <Stat
-                title="근로일 합계"
+                title="총 근로일"
                 value={data.summary.workerDays}
                 unit="일"
                 icon={ClipboardList}
@@ -2227,6 +2369,14 @@ function Records({ api, site, version, run, busy }) {
                 color="gray"
                 footer="실제 지급액과 다를 수 있어요"
               />
+              <Stat
+                title="기록 정정 요청"
+                value={data.summary.pendingCorrections}
+                unit="건"
+                icon={FileText}
+                color="gray"
+                footer="정정 요청"
+              />
             </div>
             <section className="panel">
               <div className="panel-heading">
@@ -2241,9 +2391,7 @@ function Records({ api, site, version, run, busy }) {
                       <th>근로일</th>
                       <th>근무 시간</th>
                       <th>예상 일당</th>
-                      <th>사진 확인</th>
-                      <th>사진 없는 확인</th>
-                      <th>정정</th>
+                      <th>상태</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2258,15 +2406,14 @@ function Records({ api, site, version, run, busy }) {
                           {worker.workedMinutes % 60}분
                         </td>
                         <td>{money(worker.expectedWageTotal)}</td>
-                        <td>{worker.photoConfirmedChecks}일</td>
-                        <td>{worker.statementOnlyChecks}일</td>
+
                         <td>
                           <Tag
                             tone={worker.pendingCorrections ? "amber" : "green"}
                           >
                             {worker.pendingCorrections
                               ? worker.pendingCorrections + "건 요청"
-                              : "정정 요청 없음"}
+                              : "확정"}
                           </Tag>
                         </td>
                       </tr>
@@ -2312,26 +2459,54 @@ function Records({ api, site, version, run, busy }) {
     </>
   );
 }
+function MonthPicker({ value, onChange }) {
+  const [year, month] = day().slice(0, 7).split("-").map(Number);
+  const months = [
+    new Date(Date.UTC(year, month - 1, 1)),
+    new Date(Date.UTC(year, month - 2, 1)),
+  ].map((d) => d.toISOString().slice(0, 7));
+  return (
+    <div className="month-picker">
+      <div className="month-tabs">
+        {months.map((m) => (
+          <button
+            key={m}
+            className={m === value ? "active" : ""}
+            onClick={() => onChange(m)}
+          >
+            {Number(m.slice(5))}월
+          </button>
+        ))}
+      </div>
+      <details className="other-month">
+        <summary>다른 월</summary>
+        <input
+          aria-label="조회 월"
+          type="month"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </details>
+    </div>
+  );
+}
 function Reports({ api, site, workers, version, run, busy, openIncident }) {
   const [month, setMonth] = useState(() => day().slice(0, 7)),
     [target, setTarget] = useState("all"),
+    [incidentId, setIncidentId] = useState(""),
+    [previewPath, setPreviewPath] = useState(null),
+    [offset, setOffset] = useState(0),
     [range, setRange] = useState(false),
     [from, setFrom] = useState(() => day().slice(0, 7) + "-01"),
-    [to, setTo] = useState(day),
-    [offset, setOffset] = useState(0),
-    [previewPath, setPreviewPath] = useState(null);
-  const selectedPath = workReportPath(site.id, {
-    month,
-    from: range ? from : undefined,
-    to: range ? to : undefined,
-    target,
-  });
-  const preview = useRemote(
+    [to, setTo] = useState(day);
+  const workOptions = { month, target, ...(range ? { from, to } : {}) };
+  const invalidRange = range && (!from || !to || from > to);
+  const summary = useRemote(
     (signal) =>
-      previewPath
-        ? api.request(previewPath, { signal })
-        : Promise.resolve(null),
-    [api, previewPath, version],
+      api.request(sitePath(site.id, "/reports/monthly") + query({ month }), {
+        signal,
+      }),
+    [api, site.id, month, version],
   );
   const incidents = useRemote(
     (signal) =>
@@ -2342,21 +2517,27 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
       ),
     [api, site.id, month, offset, version],
   );
-  const summary = useRemote(
+  const preview = useRemote(
     (signal) =>
-      api.request(sitePath(site.id, "/reports/monthly") + query({ month }), {
-        signal,
-      }),
-    [api, site.id, month, version],
+      previewPath
+        ? api.request(previewPath, { signal })
+        : Promise.resolve(null),
+    [api, previewPath, version],
   );
   const options = [
     ...new Map(
-      [
-        ...workers.map((w) => ({ userId: w.userId, name: w.name })),
-        ...(summary.data?.workers || []),
-      ].map((w) => [w.userId, w]),
+      [...workers, ...(summary.data?.workers || [])].map((w) => [w.userId, w]),
     ).values(),
   ];
+  const chosenIncident =
+    incidents.data?.incidents.find((i) => i.id === incidentId) ||
+    incidents.data?.incidents[0];
+  function changeMonth(value) {
+    setMonth(value);
+    setIncidentId("");
+    setPreviewPath(null);
+    setOffset(0);
+  }
   function download(path, format) {
     run(
       async (signal) =>
@@ -2369,142 +2550,183 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
   }
   return (
     <>
-      <div className="toolbar">
-        <label>
-          조회 월
-          <input
-            type="month"
-            value={month}
-            onChange={(event) => {
-              setMonth(event.target.value);
-              setOffset(0);
-              setPreviewPath(null);
-            }}
-          />
-        </label>
-      </div>
       <div className="report-grid">
         <section className="panel report-card">
-          <div className="report-icon">
-            <ClipboardList size={28} />
-          </div>
-          <h2>작업자 근로 기록</h2>
-          <label>
-            대상
-            <select
-              value={target}
-              onChange={(event) => {
-                setTarget(event.target.value);
-                setPreviewPath(null);
-              }}
-            >
-              <option value="all">전체 작업자</option>
-              {options.map((worker) => (
-                <option value={worker.userId} key={worker.userId}>
-                  {worker.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="toggle-row">
-            기간 직접 지정
-            <input
-              type="checkbox"
-              checked={range}
-              onChange={(event) => {
-                setRange(event.target.checked);
-                setPreviewPath(null);
-              }}
-            />
-          </label>
-          {range && (
-            <div className="two-col">
-              <label>
-                시작
-                <input
-                  type="date"
-                  value={from}
-                  onChange={(event) => {
-                    setFrom(event.target.value);
-                    setPreviewPath(null);
-                  }}
-                />
-              </label>
-              <label>
-                종료
-                <input
-                  type="date"
-                  value={to}
-                  onChange={(event) => {
-                    setTo(event.target.value);
-                    setPreviewPath(null);
-                  }}
-                />
-              </label>
-            </div>
-          )}
-          <div className="inline">
-            {["csv", "pdf"].map((format) => (
-              <Action
-                key={format}
-                disabled={busy || (range && (!from || !to || from > to))}
-                onClick={() =>
-                  download(
-                    workReportPath(site.id, {
-                      month,
-                      from: range ? from : undefined,
-                      to: range ? to : undefined,
-                      target,
+          <h2>월간 근로일 · 안전확인 집계</h2>
+          <p>
+            근로내용확인신고서를 쓸 때 참고하는 근로일과 임금 집계예요. 안전
+            점검과 서로 찍기 현황도 함께 담겨요.
+          </p>
+          <div className="report-controls">
+            <MonthPicker value={month} onChange={changeMonth} />
+            <div className="inline">
+              {["pdf", "csv"].map((format) => (
+                <Action
+                  key={format}
+                  disabled={busy}
+                  onClick={() =>
+                    download(
+                      sitePath(site.id, "/reports/monthly") +
+                        query({ month, format }),
                       format,
-                    }),
-                    format,
-                  )
-                }
-              >
-                <Download size={16} />
-                {format.toUpperCase()}
-              </Action>
-            ))}
+                    )
+                  }
+                >
+                  {format.toUpperCase()} 내보내기
+                </Action>
+              ))}
+            </div>
           </div>
-          <Action
-            secondary
-            disabled={busy || (range && (!from || !to || from > to))}
-            onClick={() =>
-              previewPath === selectedPath
-                ? preview.reload()
-                : setPreviewPath(selectedPath)
-            }
-          >
-            기록 미리 보기
-          </Action>
         </section>
         <section className="panel report-card">
-          <div className="report-icon">
-            <FileText size={28} />
+          <h2>사고 경위 보고서</h2>
+          <p>
+            호출부터 대응까지 시각별로 정리해요. 산재 신청과 보험 접수에 쓸 수
+            있어요. 작업자 본인에게도 같은 보고서가 열려요.
+          </p>
+          <div className="report-controls">
+            <Remote resource={incidents}>
+              {(data) =>
+                data.incidents.length ? (
+                  <>
+                    <label>
+                      사건 선택
+                      <select
+                        aria-label="보고서 사건"
+                        value={chosenIncident?.id || ""}
+                        onChange={(e) => setIncidentId(e.target.value)}
+                      >
+                        {data.incidents.map((i) => (
+                          <option key={i.id} value={i.id}>
+                            {time(i.createdAt)} {i.workerName}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <Action
+                      disabled={busy}
+                      onClick={() => openIncident(chosenIncident.id, true)}
+                    >
+                      보고서 만들기
+                    </Action>
+                    <div className="inline">
+                      <Action
+                        secondary
+                        disabled={!offset}
+                        onClick={() => setOffset(Math.max(0, offset - 30))}
+                      >
+                        이전
+                      </Action>
+                      <Action
+                        secondary
+                        disabled={data.nextOffset == null}
+                        onClick={() => setOffset(data.nextOffset)}
+                      >
+                        다음
+                      </Action>
+                    </div>
+                  </>
+                ) : (
+                  <Empty>선택한 달에 사건이 없어요.</Empty>
+                )
+              }
+            </Remote>
           </div>
-          <h2>월간 근로일·안전확인 집계</h2>
-          <p>근로일, 본인 점검, 서로 찍기와 사진 없는 확인을 구분해요.</p>
-          <div className="inline">
-            {["csv", "pdf"].map((format) => (
-              <Action
-                key={format}
-                disabled={busy}
-                onClick={() =>
-                  download(
-                    sitePath(site.id, "/reports/monthly") +
-                      query({ month, format }),
-                    format,
-                  )
-                }
+        </section>
+        <section className="panel report-card">
+          <h2>작업자 근로 기록</h2>
+          <p>
+            작업자별 출퇴근과 예상 일당을 정리해요. 작업자가 직접 내보내는
+            기록과 같은 내용이에요.
+          </p>
+          <div className="report-controls">
+            <label>
+              대상
+              <select
+                aria-label="보고서 작업자"
+                value={target}
+                onChange={(e) => {
+                  setTarget(e.target.value);
+                  setPreviewPath(null);
+                }}
               >
-                <Download size={16} />
-                {format.toUpperCase()}
-              </Action>
-            ))}
+                <option value="all">전체 작업자</option>
+                {options.map((w) => (
+                  <option key={w.userId} value={w.userId}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <details className="report-range">
+              <summary>기간 직접 지정</summary>
+              <label className="toggle-row">
+                기간 지정 사용
+                <input
+                  type="checkbox"
+                  checked={range}
+                  onChange={(e) => {
+                    setRange(e.target.checked);
+                    setPreviewPath(null);
+                  }}
+                />
+              </label>
+              {range && (
+                <div className="two-col">
+                  <label>
+                    시작
+                    <input
+                      type="date"
+                      value={from}
+                      onChange={(e) => {
+                        setFrom(e.target.value);
+                        setPreviewPath(null);
+                      }}
+                    />
+                  </label>
+                  <label>
+                    종료
+                    <input
+                      type="date"
+                      value={to}
+                      onChange={(e) => {
+                        setTo(e.target.value);
+                        setPreviewPath(null);
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+            </details>
+            <div className="inline">
+              {["pdf", "csv"].map((format) => (
+                <Action
+                  key={format}
+                  disabled={busy || invalidRange}
+                  onClick={() =>
+                    download(
+                      workReportPath(site.id, { ...workOptions, format }),
+                      format,
+                    )
+                  }
+                >
+                  {format.toUpperCase()} 내보내기
+                </Action>
+              ))}
+            </div>
+            <Action
+              secondary
+              disabled={busy || invalidRange}
+              onClick={() =>
+                setPreviewPath(workReportPath(site.id, workOptions))
+              }
+            >
+              기록 미리 보기
+            </Action>
           </div>
         </section>
       </div>
-      {previewPath === selectedPath && (
+      {previewPath && (
         <Remote resource={preview}>
           {(data) => (
             <section className="panel">
@@ -2520,8 +2742,8 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
                     <tr>
                       <th>작업자</th>
                       <th>날짜</th>
-                      <th>직종·구역</th>
-                      <th>출근·퇴근</th>
+                      <th>직종 · 구역</th>
+                      <th>출근 · 퇴근</th>
                       <th>예상 일당</th>
                     </tr>
                   </thead>
@@ -2531,7 +2753,7 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
                         <td>{row.name}</td>
                         <td>{row.workDate}</td>
                         <td>
-                          {row.occupation || "미등록"} · {row.zone || "미등록"}
+                          {row.occupation} · {row.zone}
                         </td>
                         <td>
                           {time(row.checkedInAt)} / {time(row.checkedOutAt)}
@@ -2543,101 +2765,17 @@ function Reports({ api, site, workers, version, run, busy, openIncident }) {
                 </table>
               </div>
               {!data.shifts.length && <Empty />}
-              {data.dataGaps.length > 0 && (
+              {data.dataGaps?.length > 0 && (
                 <p className="notice amber">{data.dataGaps.join(" · ")}</p>
               )}
             </section>
           )}
         </Remote>
       )}
-      <section className="panel">
-        <div className="panel-heading">
-          <h2>사고 경위 보고서</h2>
-        </div>
-        <Remote resource={incidents}>
-          {(data) => (
-            <>
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>작업자</th>
-                      <th>시작</th>
-                      <th>구역·상태</th>
-                      <th>사건 상세</th>
-                      <th>다운로드</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.incidents.map((incident) => (
-                      <tr key={incident.id}>
-                        <td>{incident.workerName}</td>
-                        <td>{time(incident.createdAt)}</td>
-                        <td>
-                          {incident.zone} · {text(incident.status)}
-                        </td>
-                        <td>
-                          <Action
-                            secondary
-                            onClick={() => openIncident(incident.id, true)}
-                          >
-                            상세 보기
-                          </Action>
-                        </td>
-                        <td>
-                          <div className="inline">
-                            {["pdf", "csv"].map((format) => (
-                              <Action
-                                key={format}
-                                secondary
-                                disabled={busy}
-                                onClick={() =>
-                                  download(
-                                    sitePath(
-                                      site.id,
-                                      "/reports/incidents/" + incident.id,
-                                    ) + query({ format }),
-                                    format,
-                                  )
-                                }
-                              >
-                                {format.toUpperCase()}
-                              </Action>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {!data.incidents.length && (
-                <Empty>선택한 달에 사건이 없어요.</Empty>
-              )}
-              <div className="toolbar">
-                <Action
-                  secondary
-                  disabled={!offset}
-                  onClick={() => setOffset(Math.max(0, offset - 30))}
-                >
-                  이전
-                </Action>
-                <Action
-                  secondary
-                  disabled={data.nextOffset == null}
-                  onClick={() => setOffset(data.nextOffset)}
-                >
-                  다음
-                </Action>
-              </div>
-            </>
-          )}
-        </Remote>
-      </section>
       <div className="notice">
-        보고서에는 원본 사건, 서버 수신 시각, 정정 이력과 누락을 포함해요.
-        산재·보험 접수용 참고 자료이며 법률 판단과 실제 119 접수 확인은
-        별도예요.
+        모든 보고서에는 원본 사건 ID, 서버 수신 시각, 정정 이력, 데이터 누락
+        여부가 들어가요. 사람이 확인한 내용과 시스템이 추정한 내용을 구분해서
+        표시해요.
       </div>
     </>
   );
@@ -2704,7 +2842,10 @@ function Incident({
       api.request("/incidents/" + id + suffix, { method: "PUT", body, signal }),
     );
   return (
-    <Modal title="긴급 호출 · 대응" onClose={onClose}>
+    <section className="incident-page">
+      <button className="back-link" onClick={onClose}>
+        ‹ 현장 대시보드
+      </button>
       <Remote resource={resource}>
         {({ incident: c }) => (
           <>
@@ -2714,11 +2855,10 @@ function Incident({
               </Tag>
               <small>5초마다 갱신</small>
             </div>
-            <h2>
-              {c.worker.name} · {c.zone || "구역 미등록"}
-            </h2>
+            <h1>호출 상세 · {c.worker.name} 님</h1>
             <p>
-              시작 {time(c.createdAt)} · 최대 충격{" "}
+              {c.zone || "구역 미등록"} · {time(c.createdAt)} · 호출 #{id} ·
+              최대 충격{" "}
               {c.peakG == null ? "미기록" : c.peakG + "G (시스템 추정)"}
             </p>
             {c.location && (
@@ -2742,142 +2882,150 @@ function Incident({
                 열람 기록: {receiptError}
               </div>
             )}
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>호출 대상</th>
-                    <th>요청</th>
-                    <th>발송</th>
-                    <th>수신</th>
-                    <th>열람</th>
-                    <th>수락·거절</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {c.recipients.map((item) => (
-                    <tr key={item.userId}>
-                      <td>
-                        {item.name}
-                        <small>{text(item.role)}</small>
-                      </td>
-                      <td>{time(item.requestedAt)}</td>
-                      <td>{time(item.sentAt)}</td>
-                      <td>{time(item.receivedAt)}</td>
-                      <td>{time(item.openedAt)}</td>
-                      <td>
-                        {time(item.acceptedAt)}
-                        <small>
-                          {item.acceptedAt && item.requestedAt
-                            ? Math.max(
-                                0,
-                                Math.round(
-                                  (new Date(item.acceptedAt) -
-                                    new Date(item.requestedAt)) /
-                                    1000,
-                                ),
-                              ) + "초 후 수락"
-                            : item.declinedAt
-                              ? "거절 " + time(item.declinedAt)
-                              : ""}
-                        </small>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {contact &&
-              !contact.declinedAt &&
-              !c.responderId &&
-              ["calling", "unanswered"].includes(c.status) && (
-                <div className="inline">
-                  <Action disabled={busy} onClick={() => command("/accept")}>
-                    제가 확인하러 갈게요
-                  </Action>
-                  <Action
-                    secondary
-                    disabled={busy}
-                    onClick={() => command("/decline")}
-                  >
-                    수락 어려움
-                  </Action>
+            <div className="incident-columns">
+              <section className="panel incident-delivery">
+                <h2>누구에게 언제 갔나요</h2>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>받는 사람</th>
+                        <th>요청</th>
+                        <th>발송</th>
+                        <th>수신</th>
+                        <th>열람</th>
+                        <th>수락·거절</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {c.recipients.map((item) => (
+                        <tr key={item.userId}>
+                          <td>
+                            {item.name}
+                            <small>{text(item.role)}</small>
+                          </td>
+                          <td>{time(item.requestedAt)}</td>
+                          <td>{time(item.sentAt)}</td>
+                          <td>{time(item.receivedAt)}</td>
+                          <td>{time(item.openedAt)}</td>
+                          <td>
+                            {time(item.acceptedAt)}
+                            <small>
+                              {item.acceptedAt && item.requestedAt
+                                ? Math.max(
+                                    0,
+                                    Math.round(
+                                      (new Date(item.acceptedAt) -
+                                        new Date(item.requestedAt)) /
+                                        1000,
+                                    ),
+                                  ) + "초 후 수락"
+                                : item.declinedAt
+                                  ? "거절 " + time(item.declinedAt)
+                                  : ""}
+                            </small>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            {!c.closedAt &&
-              !c.observedAt &&
-              c.notices?.some(
-                (notice) => notice.type === "verification_overdue",
-              ) && (
-                <div className="notice amber">
-                  수락 후 2분 동안 현장 상태가 확인되지 않았어요. 반장이 직접
-                  상황을 확인해 주세요.
+                <div className="incident-events">
+                  <div>
+                    <b>{time(c.arrivedAt)}</b>
+                    <span>현장 도착 · 사람이 확인</span>
+                  </div>
+                  <div>
+                    <b>{time(c.workerRespondedAt)}</b>
+                    <span>
+                      본인 응답 ·{" "}
+                      {c.workerResponse
+                        ? text(c.workerResponse)
+                        : "응답 기록 없음"}
+                    </span>
+                  </div>
+                  <div>
+                    <b>{time(c.createdAt)}</b>
+                    <span>
+                      강한 충격 감지{" "}
+                      {c.peakG == null ? "미기록" : c.peakG + "G"} · 시스템이
+                      추정
+                    </span>
+                  </div>
                 </div>
-              )}
-            {c.status === "unanswered" && (
-              <div className="notice amber">
-                <p>
-                  수락한 동료가 없어요. 현장 책임자가 직접 연락해 안전을 확인해
-                  주세요. 긴급하면 119 전화 화면을 여세요.
-                </p>
-                <Action
-                  secondary
-                  disabled={busy}
-                  onClick={() => command("/retry")}
-                >
-                  다시 호출
-                </Action>
-                <Action secondary onClick={() => dial(c.id)}>
-                  119 전화 화면 열기
-                </Action>
-              </div>
-            )}
-            {c.responderId === user.id && c.status === "responding" && (
-              <Action disabled={busy} onClick={() => command("/arrival")}>
-                현장에 도착했어요
-              </Action>
-            )}
-            {c.responderId === user.id && c.status === "arrived" && (
-              <>
-                <label>
-                  현장에서 확인한 상태
-                  <select
-                    value={condition}
-                    onChange={(event) => setCondition(event.target.value)}
-                  >
-                    <option value="">선택</option>
-                    {[
-                      "unconscious",
-                      "immobile",
-                      "conscious",
-                      "appears_safe",
-                    ].map((value) => (
-                      <option value={value} key={value}>
-                        {text(value)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <Action
-                  disabled={busy || !condition}
-                  onClick={() => command("/observation", { condition })}
-                >
-                  관찰 상태 저장
-                </Action>
-                {c.observedAt && (
+              </section>
+              <section className="panel incident-confirmation">
+                <h2>현장 확인</h2>
+                {!c.photoId && (
+                  <div className="photo-placeholder">사고 지점 사진 (선택)</div>
+                )}
+                {contact &&
+                  !contact.declinedAt &&
+                  !c.responderId &&
+                  ["calling", "unanswered"].includes(c.status) && (
+                    <div className="inline">
+                      <Action
+                        disabled={busy}
+                        onClick={() => command("/accept")}
+                      >
+                        제가 확인하러 갈게요
+                      </Action>
+                      <Action
+                        secondary
+                        disabled={busy}
+                        onClick={() => command("/decline")}
+                      >
+                        수락 어려움
+                      </Action>
+                    </div>
+                  )}
+                {!c.closedAt &&
+                  !c.observedAt &&
+                  c.notices?.some(
+                    (notice) => notice.type === "verification_overdue",
+                  ) && (
+                    <div className="notice amber">
+                      수락 후 2분 동안 현장 상태가 확인되지 않았어요. 반장이
+                      직접 상황을 확인해 주세요.
+                    </div>
+                  )}
+                {c.status === "unanswered" && (
+                  <div className="notice amber">
+                    <p>
+                      수락한 동료가 없어요. 현장 책임자가 직접 연락해 안전을
+                      확인해 주세요. 긴급하면 119 전화 화면을 여세요.
+                    </p>
+                    <Action
+                      secondary
+                      disabled={busy}
+                      onClick={() => command("/retry")}
+                    >
+                      다시 호출
+                    </Action>
+                    <Action secondary onClick={() => dial(c.id)}>
+                      119 전화 화면 열기
+                    </Action>
+                  </div>
+                )}
+                {c.responderId === user.id && c.status === "responding" && (
+                  <Action disabled={busy} onClick={() => command("/arrival")}>
+                    현장에 도착했어요
+                  </Action>
+                )}
+                {c.responderId === user.id && c.status === "arrived" && (
                   <>
-                    <hr />
                     <label>
-                      대응 완료 사유
+                      현장에서 확인한 상태
                       <select
-                        value={reason}
-                        onChange={(event) => setReason(event.target.value)}
+                        value={condition}
+                        onChange={(event) => setCondition(event.target.value)}
                       >
                         <option value="">선택</option>
                         {[
-                          "no_help_needed",
-                          "onsite_action_completed",
-                          "handoff_confirmed",
+                          "unconscious",
+                          "immobile",
+                          "conscious",
+                          "appears_safe",
                         ].map((value) => (
                           <option value={value} key={value}>
                             {text(value)}
@@ -2885,105 +3033,161 @@ function Incident({
                         ))}
                       </select>
                     </label>
-                    <PhotoInput onChange={setPhoto} label="현장 사진 · 선택" />
                     <Action
-                      disabled={busy || !reason}
-                      onClick={() =>
-                        run(async (signal) => {
-                          const photoId = await upload(id, photo, () =>
-                            api.upload(
-                              site.id,
-                              "incident_scene",
-                              photo,
-                              signal,
-                            ),
-                          );
-                          await api.request(
-                            "/incidents/" + id + "/resolution",
-                            {
-                              method: "PUT",
-                              body: { reason, ...(photoId ? { photoId } : {}) },
-                              signal,
-                            },
-                          );
-                        })
-                      }
+                      disabled={busy || !condition}
+                      onClick={() => command("/observation", { condition })}
                     >
-                      대응 완료 저장
+                      관찰 상태 저장
                     </Action>
+                    {c.observedAt && (
+                      <>
+                        <hr />
+                        <label>
+                          대응 완료 사유
+                          <select
+                            value={reason}
+                            onChange={(event) => setReason(event.target.value)}
+                          >
+                            <option value="">선택</option>
+                            {[
+                              "no_help_needed",
+                              "onsite_action_completed",
+                              "handoff_confirmed",
+                            ].map((value) => (
+                              <option value={value} key={value}>
+                                {text(value)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <PhotoInput
+                          onChange={setPhoto}
+                          label="현장 사진 · 선택"
+                        />
+                        <Action
+                          disabled={busy || !reason}
+                          onClick={() =>
+                            run(async (signal) => {
+                              const photoId = await upload(id, photo, () =>
+                                api.upload(
+                                  site.id,
+                                  "incident_scene",
+                                  photo,
+                                  signal,
+                                ),
+                              );
+                              await api.request(
+                                "/incidents/" + id + "/resolution",
+                                {
+                                  method: "PUT",
+                                  body: {
+                                    reason,
+                                    ...(photoId ? { photoId } : {}),
+                                  },
+                                  signal,
+                                },
+                              );
+                            })
+                          }
+                        >
+                          대응 완료 저장
+                        </Action>
+                      </>
+                    )}
                   </>
                 )}
-              </>
-            )}
-            <div className="settings-row">
-              <span>현장 도착</span>
-              <b>
-                {c.resolution === "worker_confirmed_okay" && !c.arrivedAt
-                  ? "출동 대상 아님"
-                  : time(c.arrivedAt)}
-              </b>
+                <div className="settings-row">
+                  <span>현장 도착</span>
+                  <b>
+                    {c.resolution === "worker_confirmed_okay" && !c.arrivedAt
+                      ? "출동 대상 아님"
+                      : time(c.arrivedAt)}
+                  </b>
+                </div>
+                <div className="settings-row">
+                  <span>관찰</span>
+                  <b>
+                    {c.resolution === "worker_confirmed_okay" && !c.observedAt
+                      ? "출동 대상 아님"
+                      : text(c.observation) + " · " + time(c.observedAt)}
+                  </b>
+                </div>
+                {c.closedAt && (
+                  <div className="notice green">
+                    {text(c.resolution)} · {time(c.closedAt)}
+                  </div>
+                )}
+                {c.photoId && (
+                  <Photo
+                    api={api}
+                    siteId={site.id}
+                    id={c.photoId}
+                    label="사고 현장 사진"
+                  />
+                )}
+                <p className="helper">
+                  사고 지점 사진은 상황이 안정된 뒤에만 추가해요. 사진 없이도
+                  확인을 마칠 수 있어요.
+                </p>
+                <div className="inline">
+                  <Action
+                    secondary
+                    onClick={() =>
+                      dial(c.closedAt || c.status === "closed" ? null : c.id)
+                    }
+                  >
+                    <Phone size={16} />
+                    119 전화 화면 열기
+                  </Action>
+                  <Action
+                    disabled={busy}
+                    onClick={() =>
+                      run(
+                        async (signal) =>
+                          downloadFile(
+                            await api.request(
+                              sitePath(site.id, "/reports/incidents/" + id) +
+                                "?format=pdf",
+                              { signal, response: "blob" },
+                            ),
+                            "safeloop-incident.pdf",
+                          ),
+                        "사고 보고서를 내려받았어요.",
+                      )
+                    }
+                  >
+                    사고 경위 보고서 만들기
+                  </Action>
+                  <Action
+                    secondary
+                    disabled={busy}
+                    onClick={() =>
+                      run(
+                        async (signal) =>
+                          downloadFile(
+                            await api.request(
+                              sitePath(site.id, "/reports/incidents/" + id) +
+                                "?format=csv",
+                              { signal, response: "blob" },
+                            ),
+                            "safeloop-incident.csv",
+                          ),
+                        "사고 보고서를 내려받았어요.",
+                      )
+                    }
+                  >
+                    CSV 내보내기
+                  </Action>
+                </div>
+                <p className="helper">
+                  119는 앱이 전화 화면을 연 기록만 남아요. 실제 통화나 접수
+                  여부는 별도 확인이 필요해요.
+                </p>
+              </section>
             </div>
-            <div className="settings-row">
-              <span>관찰</span>
-              <b>
-                {c.resolution === "worker_confirmed_okay" && !c.observedAt
-                  ? "출동 대상 아님"
-                  : text(c.observation) + " · " + time(c.observedAt)}
-              </b>
-            </div>
-            {c.closedAt && (
-              <div className="notice green">
-                {text(c.resolution)} · {time(c.closedAt)}
-              </div>
-            )}
-            {c.photoId && (
-              <Photo
-                api={api}
-                siteId={site.id}
-                id={c.photoId}
-                label="사고 현장 사진"
-              />
-            )}
-            <p className="helper">
-              사고 지점 사진은 상황이 안정된 뒤에만 추가해요. 사진 없이도 확인을
-              마칠 수 있어요.
-            </p>
-            <div className="inline">
-              <Action
-                secondary
-                onClick={() =>
-                  dial(c.closedAt || c.status === "closed" ? null : c.id)
-                }
-              >
-                <Phone size={16} />
-                119 전화 화면 열기
-              </Action>
-              <Action
-                disabled={busy}
-                onClick={() =>
-                  run(
-                    async (signal) =>
-                      downloadFile(
-                        await api.request(
-                          sitePath(site.id, "/reports/incidents/" + id) +
-                            "?format=pdf",
-                          { signal, response: "blob" },
-                        ),
-                        "safeloop-incident.pdf",
-                      ),
-                    "사고 보고서를 내려받았어요.",
-                  )
-                }
-              >
-                사고 보고서 PDF
-              </Action>
-            </div>
-            <p className="helper">
-              전화 화면 열기는 통화 연결·신고 접수 확인이 아니에요.
-            </p>
           </>
         )}
       </Remote>
-    </Modal>
+    </section>
   );
 }

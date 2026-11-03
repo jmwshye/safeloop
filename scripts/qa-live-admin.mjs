@@ -170,7 +170,11 @@ try {
     }
     throw Error("Unexpected request: " + path);
   });
-  const button = (name) => page.getByRole("button", { name, exact: true });
+  const button = (name) =>
+    page.getByRole("button", {
+      name: name === "작업자 초대" ? /^작업자 초대/ : name,
+      exact: name !== "작업자 초대",
+    });
   const navigate = (name) =>
     page.locator("nav").getByRole("button", { name }).click();
   const modal = page.getByRole("dialog");
@@ -214,34 +218,36 @@ try {
   await close();
 
   await navigate("위험 신고");
-  await button("조치 이력 보기").click();
-  await modal.getByText(/신고자 실명 작업자/).waitFor();
-  await modal
-    .locator("input[type=file]")
-    .setInputFiles({
-      name: "test.jpg",
-      mimeType: "image/jpeg",
-      buffer: Buffer.from("test"),
-    });
-  await button("조치 완료 신고").click();
+  const detail = page.locator(".risk-detail");
+  await detail.getByText(/신고자 실명 작업자/).waitFor();
+  await detail
+    .getByRole("button", { name: "직접 조치 완료", exact: true })
+    .click();
+  await detail.locator("input[type=file]").setInputFiles({
+    name: "test.jpg",
+    mimeType: "image/jpeg",
+    buffer: Buffer.from("test"),
+  });
+  await button("조치 완료 저장").click();
   await page
     .getByText(/저장 여부를 먼저/)
     .first()
     .waitFor();
-  await button("조치 완료 신고").click();
+  await button("조치 완료 저장").click();
   await page.getByText("저장했어요.", { exact: true }).first().waitFor();
   assert.equal(uploads, 1);
   assert.deepEqual(fixes, [
     { afterPhotoId: "image-1" },
     { afterPhotoId: "image-1" },
   ]);
-  await close();
-
   await navigate("안전 타임라인");
-  await page.getByText("수락자 대응 불가 · 다른 동료 요청", { exact: true }).waitFor();
+  await page
+    .getByText("수락자 대응 불가 · 다른 동료 요청", { exact: true })
+    .waitFor();
   await button("정정 요청").waitFor();
   assert.equal(await button("정정 요청").count(), 1);
   await navigate("보고서");
+  await page.getByText("다른 월", { exact: true }).click();
   const month = page.getByLabel("조회 월");
   await month.fill("2026-09");
   await Promise.all([
@@ -255,9 +261,12 @@ try {
   await page.getByRole("cell", { name: "2026-10" }).waitFor();
   releasePreview();
   assert.equal(await page.getByRole("cell", { name: "2026-09" }).count(), 0);
-  await button("상세 보기").click();
-  await modal.getByText("출동 대상 아님").first().waitFor();
-  await modal.getByRole("button", { name: "119 전화 화면 열기" }).click();
+  await button("보고서 만들기").click();
+  const incidentPage = page.locator(".incident-page");
+  await incidentPage.getByText("출동 대상 아님").first().waitFor();
+  await incidentPage
+    .getByRole("button", { name: "119 전화 화면 열기" })
+    .click();
   await page
     .getByText(/119 전화 화면 열기 요청을 기록했어요/)
     .first()
